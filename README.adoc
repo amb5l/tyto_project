@@ -1,0 +1,32 @@
+= The Tyto Project
+
+The Tyto Project is a collection of open source FPGA designs and IP for retro computing and embedded systems.
+
+At present, the designs target *Xilinx 7-Series* FPGAs, and the *Digilent Nexys Video* board. Development is done with the free editions of Xilinx Vitis and Vivado (version *2020.1*) on Windows 10. Note that Vitis is only required for designs that include a MicroBlaze CPU.
+
+== Designs
+
+=== mb_audio_io
+
+A MicroBlaze CPU interfaced to an I^2^S audio codec. <<./doc/mb_audio_io/mb_audio_io.adoc#,More...>>
+
+=== mb_display_sd
+
+A MicroBlaze CPU with a standard definition character display, similar to the text modes of a PC VGA adapter. <<./doc/mb_display_sd/mb_display_sd.adoc#,More...>>
+
+=== hdmi_tpg
+
+An HDMI video test pattern generator, supporting resolutions from SD to full HD. Also generates an audio test tone. <<./doc/hdmi_tpg/hdmi_tpg.adoc#,More...>>
+
+== Credits
+
+Documentation is authored in https://asciidocfx.com/[AsciidocFX]. SVG diagrams are drawn in https://www.draw.io/[draw.io].
+
+== License
+
+This file is part of The Tyto Project. The Tyto Project is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Tyto Project is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License along with The Tyto Project. If not, see https://www.gnu.org/licenses/.
+
