@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 -- hdmi_tpg_nexys_video.vhd                                                   --
--- Board specific top level wrapper for the mb_display_sd design.             --
+-- Board specific top level wrapper for the hdmi_tpg design.                  --
 --------------------------------------------------------------------------------
 -- (C) Copyright 2020 Adam Barnes <ambarnes@gmail.com>                        --
 -- This file is part of The Tyto Project. The Tyto Project is free software:  --
@@ -172,8 +172,6 @@ begin
             hdmi_ch_p   => hdmi_tx_ch_p,
             hdmi_ch_n   => hdmi_tx_ch_n
         );
-
-    --------------------------------------------------------------------------------
 
     -- OLED
     oled_res_n      <= '0';
