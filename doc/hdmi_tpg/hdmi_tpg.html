@@ -446,19 +446,22 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>This design generates a video test pattern at resolutions from SD to full HD, and an audio test tone, for HDMI displays.</p>
 </div>
+<div class="paragraph">
+<p>Supported boards: <strong>Digilent Nexys Video</strong> and <strong>QMTECH Wukong</strong>.</p>
+</div>
 <div class="imageblock text-center">
 <div class="content">
 <img src="./hdmi_tpg.png" alt="hdmi tpg">
 </div>
-<div class="title">Figure 1. Mode 0 (640x480) test pattern.</div>
+<div class="title">Figure 1. Example display (640x480).</div>
 </div>
 <div class="paragraph">
-<p>Note that the 1080p (1485Mbps) modes overclock the TMDS SelectIO outputs of the Xilinx 7-series FPGA.</p>
+<p>Note that the 1080p (1485Mbps) display modes overclock the TMDS SelectIO outputs of the Xilinx 7-series FPGA.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="truegetting-started"><a class="anchor" href="#truegetting-started"></a>Getting Started</h2>
+<h2 id="truebuild-procedure"><a class="anchor" href="#truebuild-procedure"></a>Build Procedure</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The following instructions apply to Windows 10, and require Xilinx Vivado and Vitis version 2020.1 or later to be installed.</p>
@@ -480,7 +483,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </li>
 <li>
-<p>Run the <code>xbuild</code> batch file, specifying the design name and board name as arguments, to create the Vivado project in the <code>xproj</code> directory, and to build an FPGA bitstream. The number of parallel jobs to be used during compilation by Vivado may also be specified on the command line; this defaults to 1 if not specified. For example:</p>
+<p>Run the <code>xbuild</code> batch file, specifying the design name (<code>hdmi_tpg</code>) and board name (<code>nexys_video</code> or <code>qmtech_wukong</code>) as arguments, to create the Vivado project in the <code>xproj</code> directory, and to build an FPGA bitstream. The number of parallel jobs to be used during compilation by Vivado may also be specified on the command line; this defaults to 1 if not specified. For example:</p>
 <div class="literalblock">
 <div class="content">
 <pre>C:\&gt; cd \work\tyto_project
@@ -493,65 +496,86 @@ C:\work\tyto_project&gt; xbuild.bat hdmi_tpg nexys_video 8</pre>
 <div class="paragraph">
 <p>After the build process has completed, the Vivado project may be opened in the Vivado IDE.</p>
 </div>
-<div class="paragraph">
-<p>To program the bitstream into a Nexys Video board:</p>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>With the power off, connect the Nexys Video board&#8217;s <strong>PROG</strong> port to the host PC and its <strong>HDMI OUT</strong> port to the monitor.</p>
-</li>
-<li>
-<p>Power on the Nexys Video board.</p>
-</li>
-<li>
-<p>Run the <code>xprog</code> batch file, specifying the design name and board name as arguments. For example:</p>
+</div>
+<div class="sect1">
+<h2 id="trueprogramming-procedure"><a class="anchor" href="#trueprogramming-procedure"></a>Programming Procedure</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>First, ensure that the FPGA board is correctly connected to the host PC and the display monitor as follows:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Digilent Nexys Video</dt>
+<dd>
+<p>Connect the <strong>PROG</strong> port to the host PC and the <strong>HDMI OUT</strong> port to the monitor.</p>
+</dd>
+<dt class="hdlist1">QMTECH Wukong</dt>
+<dd>
+<p>Connect <strong>J1</strong> to a suitable JTAG programmer (e.g. <a href="https://reference.digilentinc.com/reference/programmers/jtag-hs2/start">Digilent JTAG-HS2</a>) and <strong>P3</strong> to the monitor.</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>To program the bitstream into the board, run the <code>xprog</code> batch file, specifying the design name and board name as arguments. For example:</p>
+</div>
 <div class="literalblock">
 <div class="content">
 <pre>C:\work\tyto_project&gt; xprog.bat hdmi_tpg nexys_video</pre>
 </div>
 </div>
-</li>
-</ol>
-</div>
 <div class="paragraph">
-<p>The monitor should display the image shown in Figure 1 above.</p>
+<p>When the programming process has completed, the monitor should display the image shown in Figure 1 above.</p>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="trueoperation"><a class="anchor" href="#trueoperation"></a>Operation</h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p>The display mode is set by switches 3..0 as follows (0 = down, 1 = up):</p>
+<p>The display mode is cycled by pressing a button (BTNC on the Digilent Nexys Video, SW3 on the QMTECH Wukong):</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>Mode  SW3..0      Description
-====  ======   =================
- 0     0000     640x480p60
- 1     0001     720x480p60 4:3
- 2     0010     720x480p60 16:9
- 3     0011     1280x720p60
- 4     0100     1920x1080i60
- 5     0101     720x480i60 4:3
- 6     0110     720x480i60 16:9
- 7     0111     1920x1080p60
- 8     1000     720x576p50 4:3
- 9     1001     720x576p50 16:9
- 10    1010     1280x720p50
- 11    1011     1920x1080i50
- 12    1100     720x576i50 4:3
- 13    1101     720x576i50 16:9
- 14    1110     1920x1080p50</pre>
+<pre>Mode   Description
+====   =================
+ 0     640x480p60
+ 1     720x480p60 4:3
+ 2     720x480p60 16:9
+ 3     1280x720p60
+ 4     1920x1080i60
+ 5     720x480i60 4:3
+ 6     720x480i60 16:9
+ 7     1920x1080p60
+ 8     720x576p50 4:3
+ 9     720x576p50 16:9
+ 10    1280x720p50
+ 11    1920x1080i50
+ 12    720x576i50 4:3
+ 13    720x576i50 16:9
+ 14    1920x1080p50</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The aspect ratio is signalled by AVI InfoFrames, but this does not work automatically with all HDTVs.</p>
+<p>Note that the aspect ratio is signalled by AVI InfoFrames, but this does not work automatically with all HDTVs.</p>
 </div>
 <div class="paragraph">
-<p>Switch 4 sets DVI mode (all HDMI enhancements to TMDS encoding are disabled, including audio).</p>
+<p>On the Nexys Video, switch SW0 sets DVI mode (all HDMI enhancements to TMDS encoding are disabled, including audio).</p>
 </div>
 <div class="paragraph">
-<p>LEDs 4..0 reflect the state of switches 4..0.</p>
+<p>LEDs indicate the current state as follows:</p>
 </div>
-<div class="paragraph">
-<p>LEDs 7..5 should be on and steady, showing that the 3 MMCMs are locked (system, video and audio clocks).</p>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Digilent Nexys Video</dt>
+<dd>
+<p>LD7..5 indicate that the system, pixel and audio clocks are locked (flashing at 1Hz); LD4 indicates DVI mode; LD3..0 indicate the current video mode number as 4-bit binary number.</p>
+</dd>
+<dt class="hdlist1">QMTECH Wukong</dt>
+<dd>
+<p>D5 indicates the MMCM lock state: 4Hz = all unlocked, 2Hz = partial lock, 1Hz = all locked. D6 shows the LSB of the current binary mode number (on = 1).</p>
+</dd>
+</dl>
 </div>
 </div>
 </div>
@@ -632,7 +656,7 @@ C:\work\tyto_project&gt; xbuild.bat hdmi_tpg nexys_video 8</pre>
 <h2 id="truesimulation"><a class="anchor" href="#truesimulation"></a>Simulation</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>A simulation of the top level (<code>tb_hdmi_tpg_nexys_video.vhd</code>) is provided as part of the Vivado project. The UUT is run for long enough to capture a full video frame in each of the 15 video modes. The video capture results are dumped in numbered BMP files. Data packets are extracted and may be inspected using the waveform viewer. Note that simulation run times are substantial.</p>
+<p>A simulation of the top level is provided as part of the Vivado project. The UUT is run for long enough to capture a full video frame in each of the 15 video modes. The video capture results are dumped in numbered BMP files. Data packets are extracted and may be inspected using the waveform viewer. Note that simulation run times are substantial.</p>
 </div>
 <style>
   .imageblock > .title {
@@ -644,7 +668,7 @@ C:\work\tyto_project&gt; xbuild.bat hdmi_tpg nexys_video 8</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-06-17 21:50:30 +0100
+Last updated 2020-06-28 18:29:01 +0100
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/github.min.css">

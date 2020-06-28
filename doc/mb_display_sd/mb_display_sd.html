@@ -446,6 +446,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>This design combines a MicroBlaze CPU with a standard definition text display, similar to the text modes of a PC VGA adapter.</p>
 </div>
+<div class="paragraph">
+<p>Supported boards: <strong>Digilent Nexys Video</strong> and <strong>QMTECH Wukong</strong>.</p>
+</div>
 <div class="imageblock text-center">
 <div class="content">
 <img src="./mb_display_sd_80x25.png" alt="mb display sd 80x25">
@@ -477,7 +480,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="sect1">
-<h2 id="truegetting-started"><a class="anchor" href="#truegetting-started"></a>Getting Started</h2>
+<h2 id="truebuild-procedure"><a class="anchor" href="#truebuild-procedure"></a>Build Procedure</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The following instructions apply to Windows 10, and require Xilinx Vivado and Vitis version 2020.1 or later to be installed.</p>
@@ -499,7 +502,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </li>
 <li>
-<p>Run the <code>xbuild</code> batch file, specifying the design name and board name as arguments, to create Vivado and Vitis projects in the <code>xproj</code> directory, and to build an FPGA bitstream. The number of parallel jobs to be used during compilation by Vivado may also be specified on the command line; this defaults to 1 if not specified. For example:</p>
+<p>Run the <code>xbuild</code> batch file, specifying the design name (<code>mb_display_sd</code>) and board name (<code>nexys_video</code> or <code>qmtech_wukong</code>) as arguments, to create Vivado and Vitis projects in the <code>xproj</code> directory, and to build an FPGA bitstream. The number of parallel jobs to be used during compilation by Vivado may also be specified on the command line; this defaults to 1 if not specified. For example:</p>
 <div class="literalblock">
 <div class="content">
 <pre>C:\&gt; cd \work\tyto_project
@@ -512,29 +515,36 @@ C:\work\tyto_project&gt; xbuild.bat mb_display_sd nexys_video 8</pre>
 <div class="paragraph">
 <p>After the build process has completed, the Vivado and Vitis projects may be opened in their respective IDEs.</p>
 </div>
-<div class="paragraph">
-<p>To program the bitstream into a Nexys Video board:</p>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>With the power off, connect the Nexys Video board&#8217;s <strong>PROG</strong> port to the host PC and its <strong>HDMI OUT</strong> port to the monitor.</p>
-</li>
-<li>
-<p>Power on the Nexys Video board.</p>
-</li>
-<li>
-<p>Run the <code>xprog</code> batch file, specifying the design name and board name as arguments. For example:</p>
+</div>
+<div class="sect1">
+<h2 id="trueprogramming-procedure"><a class="anchor" href="#trueprogramming-procedure"></a>Programming Procedure</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>First, ensure that the FPGA board is correctly connected to the host PC and the display monitor as follows:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Digilent Nexys Video</dt>
+<dd>
+<p>Connect the <strong>PROG</strong> port to the host PC and the <strong>HDMI OUT</strong> port to the monitor.</p>
+</dd>
+<dt class="hdlist1">QMTECH Wukong</dt>
+<dd>
+<p>Connect <strong>J1</strong> to a suitable JTAG programmer (e.g. <a href="https://reference.digilentinc.com/reference/programmers/jtag-hs2/start">Digilent JTAG-HS2</a>) and <strong>P3</strong> to the monitor.</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>To program the bitstream into the board, run the <code>xprog</code> batch file, specifying the design name and board name as arguments. For example:</p>
+</div>
 <div class="literalblock">
 <div class="content">
-<pre>C:\work\tyto_project&gt; xprog.bat mb_display_sd nexys_video</pre>
+<pre>C:\work\tyto_project&gt; xprog.bat hdmi_tpg nexys_video</pre>
 </div>
-</div>
-</li>
-</ol>
 </div>
 <div class="paragraph">
-<p>The monitor should display the image shown in Figure 1 above.</p>
+<p>When the programming process has completed, the monitor should display the image shown in Figure 1 above.</p>
 </div>
 </div>
 </div>
@@ -728,7 +738,7 @@ C:\work\tyto_project&gt; xbuild.bat mb_display_sd nexys_video 8</pre>
 <h2 id="truesimulation"><a class="anchor" href="#truesimulation"></a>Simulation</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>A simulation testbench (<code>tb_mb_display_sd_nexys_video.vhd</code>) is provided as part of the Vivado project. This captures the video output to a BMP file. Note that simulation run times are substantial.</p>
+<p>A simulation testbench is provided as part of the Vivado project. This captures the video output to a BMP file. Note that simulation run times are substantial.</p>
 </div>
 <style>
   .imageblock > .title {
@@ -740,7 +750,7 @@ C:\work\tyto_project&gt; xbuild.bat mb_display_sd nexys_video 8</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-06-17 21:48:37 +0100
+Last updated 2020-06-28 18:29:04 +0100
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/github.min.css">
