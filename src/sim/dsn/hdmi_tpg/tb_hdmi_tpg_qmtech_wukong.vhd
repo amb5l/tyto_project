@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
--- tb_hdmi_tpg_nexys_video.vhd                                                --
--- Simulation testbench for hdmi_tpg_nexys_video.vhd.                         --
+-- tb_hdmi_tpg_qmtech_wukong.vhd                                              --
+-- Simulation testbench for hdmi_tpg_qmtech_wukong.vhd.                       --
 --------------------------------------------------------------------------------
 -- (C) Copyright 2020 Adam Barnes <ambarnes@gmail.com>                        --
 -- This file is part of The Tyto Project. The Tyto Project is free software:  --
@@ -25,21 +25,19 @@ use std.env.all;
 library xil_defaultlib;
 use xil_defaultlib.types_pkg.all;
 
-entity tb_hdmi_tpg_nexys_video is
-end entity tb_hdmi_tpg_nexys_video;
+entity tb_hdmi_tpg_qmtech_wukong is
+end entity tb_hdmi_tpg_qmtech_wukong;
 
-architecture sim of tb_hdmi_tpg_nexys_video is
+architecture sim of tb_hdmi_tpg_qmtech_wukong is
 
-    signal clki_100m        : std_logic;
-    signal btn_rst_n        : std_logic;
-    signal btn_c            : std_logic;
-    signal sw               : std_logic_vector(7 downto 0);
-    signal led              : std_logic_vector(7 downto 0);
+    signal clki_50m     : std_logic;
+    signal key_n        : std_logic_vector(1 downto 0);
+    signal led_n        : std_logic_vector(1 downto 0);
 
-    signal hdmi_tx_clk_p    : std_logic;
-    signal hdmi_tx_clk_n    : std_logic;
-    signal hdmi_tx_ch_p     : std_logic_vector(0 to 2);
-    signal hdmi_tx_ch_n     : std_logic_vector(0 to 2);
+    signal hdmi_clk_p   : std_logic;
+    signal hdmi_clk_n   : std_logic;
+    signal hdmi_d_p     : std_logic_vector(0 to 2);
+    signal hdmi_d_n     : std_logic_vector(0 to 2);
 
     signal pix_rst      : std_logic;
     signal pix_clk      : std_logic;
@@ -57,75 +55,60 @@ architecture sim of tb_hdmi_tpg_nexys_video is
     signal vga_g        : std_logic_vector(7 downto 0);
     signal vga_b        : std_logic_vector(7 downto 0);
 
-    signal cap_stb          : std_logic;
+    signal cap_stb      : std_logic;
 
 begin
 
-    clki_100m <=
-        '1' after 5ns when clki_100m = '0' else
-        '0' after 5ns when clki_100m = '1' else
+    clki_50m <=
+        '1' after 10ns when clki_50m = '0' else
+        '0' after 10ns when clki_50m = '1' else
         '0';
-
-    sw <= (others => '0');
 
     process
         variable mode : integer;
     begin
         mode := 0;
-        btn_rst_n <= '0';
-        btn_c <= '0';
+        key_n(0) <= '0';
+        key_n(1) <= '1';
         pix_rst <= '1';
         wait for 20ns;
-        btn_rst_n <= '1';
+        key_n(0) <= '1';
         wait until rising_edge(pix_clk);
         wait until rising_edge(pix_clk);
         pix_rst <= '0';
-
         loop
             wait until rising_edge(cap_stb);
             mode := mode + 1;
             if mode = 15 then
                 exit;
             end if;
-            btn_c <= '1';
+            key_n(1) <= '0';
             wait for 100ns;
-            btn_c <= '0';
+            key_n(1) <= '1';
             wait for 100ns;
         end loop;
     end process;
 
     UUT: entity work.top
         port map (
-            clki_100m       => clki_100m,
-            led             => led,
-            btn_rst_n       => btn_rst_n,
-            btn_c           => btn_c,
-            sw              => sw,
-            oled_res_n      => open,
-            oled_d_c        => open,
-            oled_sclk       => open,
-            oled_sdin       => open,
-            hdmi_tx_clk_p   => hdmi_tx_clk_p,
-            hdmi_tx_clk_n   => hdmi_tx_clk_n,
-            hdmi_tx_ch_p    => hdmi_tx_ch_p,
-            hdmi_tx_ch_n    => hdmi_tx_ch_n,
-            ac_mclk         => open,
-            ac_dac_sdata    => open,
-            uart_rx_out     => open,
-            eth_rst_n       => open,
-            ftdi_rd_n       => open,
-            ftdi_wr_n       => open,
-            ftdi_siwu_n     => open,
-            ftdi_oe_n       => open,
-            ps2_clk         => open,
-            ps2_data        => open,
-            qspi_cs_n       => open
+            clki_50m    => clki_50m,
+            led_n       => led_n,
+            key_n       => key_n,
+            ser_tx      => open,
+            hdmi_clk_p  => hdmi_clk_p,
+            hdmi_clk_n  => hdmi_clk_n,
+            hdmi_d_p    => hdmi_d_p,
+            hdmi_d_n    => hdmi_d_n,
+            hdmi_scl    => open,
+            hdmi_sda    => open,
+            eth_rst_n   => open,
+            ddr3_rst_n  => open
         );
 
     DECODE: entity work.model_hdmi_decoder
         port map (
             rst     => pix_rst,
-            ch      => hdmi_tx_ch_p,
+            ch      => hdmi_d_p,
             clk     => pix_clk,
             pstb    => data_pstb,
             hb      => data_hb,
@@ -142,7 +125,7 @@ begin
 
     CAPTURE: entity work.model_vga_sink
         generic map (
-            name        => "tb_hdmi_tpg_nexys_video"
+            name        => "tb_hdmi_tpg_qmtech_wukong"
         )
         port map (
             rst         => '0',

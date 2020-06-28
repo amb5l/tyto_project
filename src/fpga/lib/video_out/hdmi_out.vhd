@@ -47,7 +47,6 @@ entity hdmi_out is
         mode_vs_pol : in    std_logic;                      -- vertical sync polarity (1 = high)
         mode_hs_pol : in    std_logic;                      -- horizontal sync polarity (1 = high)
 
-        raw_ce      : out   std_logic;
         raw_f       : out   std_logic;
         raw_vs      : out   std_logic;
         raw_hs      : out   std_logic;
@@ -126,7 +125,6 @@ begin
             h_sync      => mode_h_sync,
             h_bp        => mode_h_bp,
             align       => (others => '0'),
-            ce          => raw_ce,
             f           => raw_f,
             vs          => raw_vs,
             hs          => raw_hs,

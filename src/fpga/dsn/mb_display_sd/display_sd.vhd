@@ -22,6 +22,9 @@ use ieee.numeric_std.all;
 library xil_defaultlib;
 
 entity display_sd is
+    generic (
+        fref        : real                                   -- reference clock frequency (MHz)
+    );
     port (
 
         ref_rst     : in    std_logic;                      -- MMCM reset
@@ -29,6 +32,8 @@ entity display_sd is
 
         sys_rst     : in    std_logic;                      -- system reset
         sys_clk     : in    std_logic;                      -- system clock
+
+        pix_rst     : out   std_logic;                      -- pixel clock reset (loss of lock)
 
         bram_en     : in    std_logic;                      -- character buffer enable
         bram_we     : in    std_logic_vector(3 downto 0);
@@ -49,7 +54,6 @@ end entity display_sd;
 
 architecture synth of display_sd is
 
-    signal pix_rst          : std_logic;
     signal pix_clk          : std_logic;
     signal pix_clk_x5       : std_logic;
 
@@ -73,7 +77,6 @@ architecture synth of display_sd is
     signal mode_h_sync      : std_logic_vector(6 downto 0);   -- horizontal sync width
     signal mode_h_bp        : std_logic_vector(7 downto 0);   -- horizontal back porch
 
-    signal raw_ce           : std_logic;                      -- active area enable in
     signal raw_f            : std_logic;                      -- field ID in
     signal raw_vs           : std_logic;                      -- vertical sync in
     signal raw_hs           : std_logic;                      -- horizontal sync in
@@ -98,8 +101,11 @@ architecture synth of display_sd is
     alias char_buf_code     : std_logic_vector(7 downto 0) is char_buf_data(7 downto 0);
     alias char_buf_attr     : std_logic_vector(7 downto 0) is char_buf_data(15 downto 8);
 
+    signal raw_ax_r         : std_logic_vector(11 downto 0);  -- active area x position in, adjusted for pixel repetition
+
 begin
 
+    -- pixels are repeated => h values are doubled
     process(pal_ntsc)
     begin
         if pal_ntsc = '1' then -- 720 x 576 @ 50Hz interlaced
@@ -107,26 +113,26 @@ begin
             mode_v_sync <= std_logic_vector(to_unsigned(3,mode_v_sync'length));
             mode_v_bp   <= std_logic_vector(to_unsigned(19,mode_v_bp'length));
             mode_v_act  <= std_logic_vector(to_unsigned(576,mode_v_act'length));
-            mode_h_tot  <= std_logic_vector(to_unsigned(864,mode_h_tot'length));
-            mode_h_sync <= std_logic_vector(to_unsigned(63,mode_h_sync'length));
-            mode_h_bp   <= std_logic_vector(to_unsigned(69,mode_h_bp'length));
-            mode_h_act  <= std_logic_vector(to_unsigned(720,mode_h_act'length));
+            mode_h_tot  <= std_logic_vector(to_unsigned(2*864,mode_h_tot'length));
+            mode_h_sync <= std_logic_vector(to_unsigned(2*63,mode_h_sync'length));
+            mode_h_bp   <= std_logic_vector(to_unsigned(2*69,mode_h_bp'length));
+            mode_h_act  <= std_logic_vector(to_unsigned(2*720,mode_h_act'length));
         else -- 720 x 480 @ 59.94Hz interlaced
             mode_v_tot  <= std_logic_vector(to_unsigned(525,mode_v_tot'length));
             mode_v_sync <= std_logic_vector(to_unsigned(3,mode_v_sync'length));
             mode_v_bp   <= std_logic_vector(to_unsigned(15,mode_v_bp'length));
             mode_v_act  <= std_logic_vector(to_unsigned(480,mode_v_act'length));
-            mode_h_tot  <= std_logic_vector(to_unsigned(858,mode_h_tot'length));
-            mode_h_sync <= std_logic_vector(to_unsigned(62,mode_h_sync'length));
-            mode_h_bp   <= std_logic_vector(to_unsigned(57,mode_h_bp'length));
-            mode_h_act  <= std_logic_vector(to_unsigned(720,mode_h_act'length));
+            mode_h_tot  <= std_logic_vector(to_unsigned(2*858,mode_h_tot'length));
+            mode_h_sync <= std_logic_vector(to_unsigned(2*62,mode_h_sync'length));
+            mode_h_bp   <= std_logic_vector(to_unsigned(2*57,mode_h_bp'length));
+            mode_h_act  <= std_logic_vector(to_unsigned(2*720,mode_h_act'length));
         end if;
     end process;
 
     -- video clock is fixed for these SD modes
     VIDEO_CLOCK: entity xil_defaultlib.video_clock_out_27m
         generic map (
-            fref    => 100.0
+            fref    => fref
         )
         port map (
             rsti    => ref_rst,
@@ -135,6 +141,8 @@ begin
             clko    => pix_clk,
             clko_x5 => pix_clk_x5
         );
+
+    raw_ax_r <= std_logic_vector(shift_right(unsigned(raw_ax),1));
 
     process(pix_clk)
 
@@ -185,10 +193,10 @@ begin
                 vga_ay              <= (others => '0');
                 (vga_r,vga_g,vga_b) <= std_logic_vector'(x"000000");
 
-            elsif raw_ce = '1' then
+            else
 
                 -- character buffer address
-                cx := shift_right(unsigned(raw_ax)-(40-4),3)(6 downto 0);    -- adjust for start pos, 4 clocks ahead, divide by char width (8)
+                cx := shift_right(unsigned(raw_ax_r)-(40-4),3)(6 downto 0);    -- adjust for start pos, 4 clocks ahead, divide by char width (8)
                 if pal_ntsc = '1' then
                     cy := shift_right(unsigned(raw_ay) - 32,4)(4 downto 0);  -- adjust for start pos, divide by char height (16) (80x32, 576i)
                 else
@@ -204,7 +212,7 @@ begin
 
                 -- shift/load
                 char_sr <= char_sr(6 downto 0) & '0';
-                if raw_ax(2 downto 0) = "111" then
+                if raw_ax_r(2 downto 0) = "111" then
                     char_sr <= char_rom_data;
                     char_attr <= char_buf_attr;
                 end if;
@@ -233,9 +241,9 @@ begin
                         raw_v_vis <= '0';
                     end if;
                 end if;
-                if to_integer(unsigned(raw_ax)) = 39 then
+                if to_integer(unsigned(raw_ax_r)) = 39 then
                     raw_h_vis <= '1';
-                elsif to_integer(unsigned(raw_ax)) = 679 then
+                elsif to_integer(unsigned(raw_ax_r)) = 679 then
                     raw_h_vis <= '0';
                 end if;
 
@@ -312,7 +320,6 @@ begin
             mode_h_bp   => mode_h_bp,
             mode_vs_pol => '0',
             mode_hs_pol => '0',
-            raw_ce      => raw_ce,
             raw_f       => raw_f,
             raw_vs      => raw_vs,
             raw_hs      => raw_hs,

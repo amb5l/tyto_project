@@ -32,11 +32,11 @@ entity top is
 
         -- LEDs, buttons and switches
         led             : out   std_logic_vector(7 downto 0);
-        btn_c_n         : in    std_logic;
-        btn_d_n         : in    std_logic;
-        btn_l_n         : in    std_logic;
-        btn_r_n         : in    std_logic;
-        btn_u_n         : in    std_logic;
+        btn_c           : in    std_logic;
+        btn_d           : in    std_logic;
+        btn_l           : in    std_logic;
+        btn_r           : in    std_logic;
+        btn_u           : in    std_logic;
         btn_rst_n       : in    std_logic;
         sw              : in    std_logic_vector(7 downto 0);
 

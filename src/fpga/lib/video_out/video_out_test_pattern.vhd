@@ -25,8 +25,9 @@ entity video_out_test_pattern is
         rst         : in    std_logic;                      -- sync reset
         clk         : in    std_logic;                      -- pixel clock
 
-        v_act       : in    std_logic_vector(10 downto 0);  -- vertical active area (lines) *
-        h_act       : in    std_logic_vector(10 downto 0);  -- horizontal active area (pixels) *
+        pix_rep     : in    std_logic;
+        v_act       : in    std_logic_vector(10 downto 0);  -- vertical active area (lines)
+        h_act       : in    std_logic_vector(10 downto 0);  -- horizontal active area (pixels)
 
         raw_vs      : in    std_logic;                      -- vertical sync in
         raw_hs      : in    std_logic;                      -- horizontal sync in
@@ -52,10 +53,13 @@ end entity video_out_test_pattern;
 
 architecture synth of video_out_test_pattern is
 
+    signal h_act_r     : std_logic_vector(h_act'range);   -- input adjusted for pixel repetition
+    signal raw_ax_r    : std_logic_vector(raw_ax'range);  -- "
+
     signal cbs         : unsigned(15 downto 0);             -- colour bar scale coefficient
 
-    signal s0_cbx      : signed(raw_ax'range);   -- x position within colour bar region
-    signal s0_cby      : signed(raw_ay'range);   -- y position within colour bar region
+    signal s0_cbx      : signed(raw_ax_r'range);            -- x position within colour bar region
+    signal s0_cby      : signed(raw_ay'range);              -- y position within colour bar region
 
     signal s1_vs       : std_logic;
     signal s1_hs       : std_logic;
@@ -64,14 +68,17 @@ architecture synth of video_out_test_pattern is
     signal s1_border   : std_logic;
     signal s1_cbe_x    : std_logic;
     signal s1_cbe_y    : std_logic;
-    signal s1_cbs      : unsigned(1 downto 0);                  -- colour bar select (1 of 4)
+    signal s1_cbs      : unsigned(1 downto 0);              -- colour bar select (1 of 4)
     signal s1_cbv      : unsigned(25 downto 0);
-    signal s1_ax       : std_logic_vector(raw_ax'range);
+    signal s1_ax       : std_logic_vector(raw_ax_r'range);
     signal s1_ay       : std_logic_vector(raw_ay'range);
 
 begin
 
-    s0_cbx <= signed(raw_ax) - resize(signed('0' & h_act(h_act'length-1 downto 2)),raw_ax'length); -- colour bar region x pos
+    h_act_r <= h_act when pix_rep = '0' else '0' & h_act(h_act'length-1 downto 1);
+    raw_ax_r <= raw_ax when pix_rep = '0' else '0' & raw_ax(raw_ax'length-1 downto 1);
+
+    s0_cbx <= signed(raw_ax_r) - resize(signed('0' & h_act_r(h_act_r'length-1 downto 2)),raw_ax_r'length); -- colour bar region x pos
     s0_cby <= signed(raw_ay) - resize(signed('0' & v_act(v_act'length-1 downto 2)),raw_ay'length); -- colour bar region y pos
 
     process(rst,clk)
@@ -879,7 +886,7 @@ begin
         elsif rising_edge(clk) then
 
             -- infer synchronous 1k x 16 ROM
-            cbs <= cbscale(unsigned(h_act(h_act'length-1 downto 1)));
+            cbs <= cbscale(unsigned(h_act_r(h_act_r'length-1 downto 1)));
 
             -- pipeline stage 1
             s1_vs <= raw_vs;
@@ -888,10 +895,10 @@ begin
             s1_hblank <= raw_hblank;
             s1_border <= '0';
             if
-                (shift_right(signed(raw_ax),1) = 0) or   -- left
+                (shift_right(signed(raw_ax_r),1) = 0) or   -- left
                 (shift_right(signed(raw_ay),1) = 0) or   -- top
-                (signed(raw_ax) = resize(signed('0' & h_act),raw_ax'length)-2) or  -- right
-                (signed(raw_ax) = resize(signed('0' & h_act),raw_ax'length)-1) or  -- right
+                (signed(raw_ax_r) = resize(signed('0' & h_act_r),raw_ax_r'length)-2) or  -- right
+                (signed(raw_ax_r) = resize(signed('0' & h_act_r),raw_ax_r'length)-1) or  -- right
                 (signed(raw_ay) = resize(signed('0' & v_act),raw_ay'length)-2) or  -- bottom
                 (signed(raw_ay) = resize(signed('0' & v_act),raw_ay'length)-1)     -- bottom
             then
@@ -900,7 +907,7 @@ begin
             if s0_cbx = 0 then
                 s1_cbe_x <= '1';
             end if;
-            if s0_cbx = shift_right(resize(signed('0' & h_act),s0_cbx'length),1) then
+            if s0_cbx = shift_right(resize(signed('0' & h_act_r),s0_cbx'length),1) then
                 s1_cbe_x <= '0';
             end if;
             if s0_cby >= signed(shift_right(unsigned(v_act),1)) then
@@ -938,8 +945,8 @@ begin
                 -- grid
                 elsif
                     (s0_cbx(s0_cbx'length-1 downto 1) = 0) or                                                                                   -- 1/4 h
-                    (s0_cbx(s0_cbx'length-1 downto 1) = shift_right(resize(signed('0' & h_act(h_act'length-1 downto 1)),s0_cbx'length),2)) or   -- 1/2 h
-                    (s0_cbx(s0_cbx'length-1 downto 1) = shift_right(resize(signed('0' & h_act(h_act'length-1 downto 1)),s0_cbx'length),1)) or   -- 3/4 h
+                    (s0_cbx(s0_cbx'length-1 downto 1) = shift_right(resize(signed('0' & h_act_r(h_act_r'length-1 downto 1)),s0_cbx'length),2)) or   -- 1/2 h
+                    (s0_cbx(s0_cbx'length-1 downto 1) = shift_right(resize(signed('0' & h_act_r(h_act_r'length-1 downto 1)),s0_cbx'length),1)) or   -- 3/4 h
                     (s0_cby(s0_cby'length-1 downto 1) = 0) or                                                                                   -- 1/4 v
                     (s0_cby(s0_cby'length-1 downto 1) = shift_right(resize(signed('0' & v_act(v_act'length-1 downto 1)),s0_cby'length),2)) or   -- 1/2 v
                     (s0_cby(s0_cby'length-1 downto 1) = shift_right(resize(signed('0' & v_act(v_act'length-1 downto 1)),s0_cby'length),1))      -- 3/4 v

@@ -21,12 +21,16 @@ use ieee.std_logic_1164.all;
 library xil_defaultlib;
 
 entity mb_display_sd is
+    generic (
+        fref        : real                                   -- reference clock frequency (MHz)
+    );
     port (
 
         ext_rst     : in    std_logic;                      -- external reset
         ref_clk     : in    std_logic;                      -- reference clock (100MHz)
 
-        led         : out   std_logic_vector(7 downto 0);   -- status LEDs
+        heartbeat   : out   std_logic;                      -- 1Hz
+        status      : out   std_logic_vector(2 downto 0);   -- status
 
         uart_tx     : out   std_logic;                      -- UART transmit
         uart_rx     : in    std_logic;                      -- UART receive
@@ -45,6 +49,7 @@ architecture synth of mb_display_sd is
     signal sys_clk_lock     : std_logic;
     signal sys_rst          : std_logic;
     signal cpu_rst          : std_logic;
+    signal pix_rst          : std_logic;
 
     signal gpi              : std_logic_vector(7 downto 0);
     signal gpo              : std_logic_vector(7 downto 0);
@@ -59,16 +64,34 @@ architecture synth of mb_display_sd is
 
 begin
 
-    led(4 downto 0) <= (others => '0');
-    led(5) <= gpo(0); -- on = PAL, off = NTSC
-    led(6) <= not cpu_rst;
-    led(7) <= not sys_rst;
+    process(sys_rst,sys_clk)
+        variable counter : integer range 0 to 99999999;
+    begin
+        if sys_rst = '1' then
+            counter := 0;
+            heartbeat <= '1';
+        elsif rising_edge(sys_clk) then
+            if counter = 49999999 then
+                counter := counter + 1;
+                heartbeat <= '0';
+            elsif counter = 99999999 then
+                counter := 0;
+                heartbeat <= '1';
+            else
+                counter := counter + 1;
+            end if;
+        end if;
+    end process;
+
+    status(0) <= not sys_rst;
+    status(1) <= not pix_rst;
+    status(2) <= not cpu_rst;
 
     gpi(7 downto 0) <= (others => '0');
 
     SYSTEM_CLOCK: entity xil_defaultlib.clock_100m
         generic map (
-            fref    => 100.0
+            fref    => fref
         )
         port map (
             rsti    => ext_rst,
@@ -97,11 +120,15 @@ begin
         );
 
     DISPLAY: entity xil_defaultlib.display_sd
+        generic map (
+            fref        => fref
+        )
         port map (
             ref_rst     => ext_rst,
             ref_clk     => ref_clk,
             sys_rst     => sys_rst,
             sys_clk     => sys_clk,
+            pix_rst     => pix_rst,
             bram_en     => bram_en,
             bram_we     => bram_we,
             bram_addr   => bram_addr,

@@ -51,6 +51,8 @@ architecture synth of video_clock_out_27m is
         r := 0.0;
         if fref = 100.0 then
             r := 47.25;
+        elsif fref = 50.0 then
+            r := 13.5;
         end if;
         return r;
     end function get_vco_mul;
@@ -61,6 +63,8 @@ architecture synth of video_clock_out_27m is
         r := 0;
         if fref = 100.0 then
             r := 5;
+        elsif fref = 50.0 then
+            r := 1;
         end if;
         return r;
     end function get_vco_div;
@@ -71,6 +75,8 @@ architecture synth of video_clock_out_27m is
         r := 0.0;
         if fref = 100.0 then
             r := 7.0;
+        elsif fref = 50.0 then
+            r := 5.0;
         end if;
         return r;
     end function get_o0_div;
@@ -81,6 +87,8 @@ architecture synth of video_clock_out_27m is
         r := 0;
         if fref = 100.0 then
             r := 35;
+        elsif fref = 50.0 then
+            r := 25;
         end if;
         return r;
     end function get_o1_div;
@@ -100,7 +108,7 @@ begin
         clkfbout_mult_f         => mmcm_vco_mul,
         clkfbout_phase          => 0.0,
         clkfbout_use_fine_ps    => false,
-        clkin1_period           => 10.0,
+        clkin1_period           => 1000.0/fref,
         clkin2_period           => 0.0,
         clkout0_divide_f        => mmcm_o0_div,
         clkout0_duty_cycle      => 0.5,

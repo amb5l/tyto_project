@@ -37,7 +37,6 @@ entity video_out_timing is
         h_bp        : in    std_logic_vector(7 downto 0);   -- 0..255
 
         align       : in    std_logic_vector(21 downto 0);  -- alignment delay
-        ce          : out   std_logic;                      -- clock enable (for pixel repetition)
         f           : out   std_logic;                      -- field ID
         vs          : out   std_logic;                      -- vertical sync
         hs          : out   std_logic;                      -- horizontal sync
@@ -50,9 +49,6 @@ entity video_out_timing is
 end entity video_out_timing;
 
 architecture synth of video_out_timing is
-
-    signal clk_div_2        : std_logic;
-    signal clken            : std_logic;
 
     signal pos_h_act        : unsigned(h_tot'range);
     signal pos_h_fp         : unsigned(h_tot'range);
@@ -115,13 +111,10 @@ begin
     s1_v_act2       <= '1' when s1_count_v = pos_v_act2 else '0';
     s1_v_fp2        <= '1' when s1_count_v = pos_v_fp2 else '0';
 
-    ce <= clk_div_2 or not pix_rep;
-
     process(rst,clk)
     begin
         if rst = '1' then
 
-            clk_div_2       <= '0';
             s1_count_h      <= (others => '0');
             s1_h_zero       <= '1';
             s1_count_v      <= (others => '0');
@@ -147,11 +140,8 @@ begin
 
         elsif rising_edge(clk) then
 
-            clk_div_2 <= not clk_div_2;
+            -- if ce = '1' then
 
-            if ce = '1' then
-
-                --------------------------------------------------------------------------------
                 -- pipeline stage 1
 
                 if align_hold = '0' then
@@ -180,7 +170,6 @@ begin
                     end if;
                 end if;
 
-                --------------------------------------------------------------------------------
                 -- pipeline stage 2
 
                 -- pixel repetition
@@ -261,7 +250,6 @@ begin
                     end if;
                 end if;
 
-                --------------------------------------------------------------------------------
                 -- pipeline stage 3: outputs
 
                 ax <= std_logic_vector(s2_ax);
@@ -272,9 +260,7 @@ begin
                 vblank <= s2_vblank;
                 hblank <= s2_hblank;
 
-                --------------------------------------------------------------------------------
-
-            end if;
+            -- end if;
 
         end if;
 

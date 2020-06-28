@@ -49,6 +49,8 @@ architecture synth of clock_100m is
         r := 0.0;
         if fref = 100.0 then
             r := 10.0;
+        elsif fref = 50.0 then
+            r := 20.0;
         end if;
         return r;
     end function get_vco_mul;
@@ -59,6 +61,8 @@ architecture synth of clock_100m is
         r := 0;
         if fref = 100.0 then
             r := 1;
+        elsif fref = 50.0 then
+            r := 1;
         end if;
         return r;
     end function get_vco_div;
@@ -68,6 +72,8 @@ architecture synth of clock_100m is
     begin
         r := 0.0;
         if fref = 100.0 then
+            r := 10.0;
+        elsif fref = 50.0 then
             r := 10.0;
         end if;
         return r;
@@ -87,7 +93,7 @@ begin
         CLKFBOUT_MULT_F         => mmcm_vco_mul,
         CLKFBOUT_PHASE          => 0.0,
         CLKFBOUT_USE_FINE_PS    => false,
-        CLKIN1_PERIOD           => 10.0,
+        CLKIN1_PERIOD           => 1000.0/fref,
         CLKIN2_PERIOD           => 0.0,
         CLKOUT0_DIVIDE_F        => mmcm_o_div,
         CLKOUT0_DUTY_CYCLE      => 0.5,

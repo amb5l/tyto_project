@@ -2,6 +2,8 @@
 
 This design combines a MicroBlaze CPU with a standard definition text display, similar to the text modes of a PC VGA adapter.
 
+Supported boards: *Digilent Nexys Video* and *QMTECH Wukong*.
+
 image::./mb_display_sd_80x25.png[title="Example display (80 x 25 characters).",align="center"]
 
 Two display modes are supported:
@@ -15,7 +17,7 @@ The text is held in a character buffer RAM, with 16 bits per character. The lowe
 
 A demonstration MicroBlaze application is provided. This includes a minimal `printf` implementation (credit to link:https://github.com/cjlano/tinyprintf[Kustaa Nyholm / SpareTimeLabs]), and character attribute control.
 
-== Getting Started
+== Build Procedure
 
 The following instructions apply to Windows 10, and require Xilinx Vivado and Vitis version 2020.1 or later to be installed.
 
@@ -26,22 +28,26 @@ To create the Vivado and Vitis projects, and build the FPGA bitstream:
 
   C:\> C:\Xilinx\Vitis\2020.1\settings64.bat
 
-. Run the `xbuild` batch file, specifying the design name and board name as arguments, to create Vivado and Vitis projects in the `xproj` directory, and to build an FPGA bitstream. The number of parallel jobs to be used during compilation by Vivado may also be specified on the command line; this defaults to 1 if not specified. For example:
+. Run the `xbuild` batch file, specifying the design name (`mb_display_sd`) and board name (`nexys_video` or `qmtech_wukong`) as arguments, to create Vivado and Vitis projects in the `xproj` directory, and to build an FPGA bitstream. The number of parallel jobs to be used during compilation by Vivado may also be specified on the command line; this defaults to 1 if not specified. For example:
 
   C:\> cd \work\tyto_project
   C:\work\tyto_project> xbuild.bat mb_display_sd nexys_video 8
 
 After the build process has completed, the Vivado and Vitis projects may be opened in their respective IDEs.
 
-To program the bitstream into a Nexys Video board:
+== Programming Procedure
 
-. With the power off, connect the Nexys Video board's *PROG* port to the host PC and its *HDMI OUT* port to the monitor.
-. Power on the Nexys Video board.
-. Run the `xprog` batch file, specifying the design name and board name as arguments. For example:
+First, ensure that the FPGA board is correctly connected to the host PC and the display monitor as follows:
 
-  C:\work\tyto_project> xprog.bat mb_display_sd nexys_video
+Digilent Nexys Video:: Connect the *PROG* port to the host PC and the *HDMI OUT* port to the monitor.
 
-The monitor should display the image shown in Figure 1 above.
+QMTECH Wukong:: Connect *J1* to a suitable JTAG programmer (e.g. https://reference.digilentinc.com/reference/programmers/jtag-hs2/start[Digilent JTAG-HS2]) and *P3* to the monitor.
+
+To program the bitstream into the board, run the `xprog` batch file, specifying the design name and board name as arguments. For example:
+
+  C:\work\tyto_project> xprog.bat hdmi_tpg nexys_video
+
+When the programming process has completed, the monitor should display the image shown in Figure 1 above.
 
 == Design Description
 
@@ -133,7 +139,7 @@ In this design, the `Debug` and `Release` configurations are identical.
 
 == Simulation
 
-A simulation testbench (`tb_mb_display_sd_nexys_video.vhd`) is provided as part of the Vivado project. This captures the video output to a BMP file. Note that simulation run times are substantial.
+A simulation testbench is provided as part of the Vivado project. This captures the video output to a BMP file. Note that simulation run times are substantial.
 
 ++++
 <style>

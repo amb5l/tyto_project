@@ -1,6 +1,6 @@
 set xprog_design [lindex $argv 0]
 set xprog_board [lindex $argv 1]
-if {$xprog_board == "nexys_video"} {
+if {$xprog_board == "nexys_video" || $xprog_board == "qmtech_wukong"} {
     open_hw
     connect_hw_server
     current_hw_target [lindex [get_hw_targets] 0]

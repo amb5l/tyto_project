@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
--- tb_mb_display_sd_nexys_video.vhd                                           --
+-- tb_mb_display_sd_qmtech_wukong.vhd                                           --
 -- Top level simulation testbench for the mb_display_sd design.               --
 --------------------------------------------------------------------------------
 -- (C) Copyright 2020 Adam Barnes <ambarnes@gmail.com>                        --
@@ -24,23 +24,19 @@ use std.env.all;
 library xil_defaultlib;
 use xil_defaultlib.types_pkg.all;
 
-entity tb_mb_display_sd_nexys_video is
-end entity tb_mb_display_sd_nexys_video;
+entity tb_mb_display_sd_qmtech_wukong is
+end entity tb_mb_display_sd_qmtech_wukong;
 
-architecture sim of tb_mb_display_sd_nexys_video is
+architecture sim of tb_mb_display_sd_qmtech_wukong is
 
-    constant mode           : std_logic_vector(3 downto 0) := "0000";
-    constant dvi            : std_logic := '0';
+    signal clki_50m         : std_logic;
+    signal key_n            : std_logic_vector(1 downto 0);
+    signal led_n            : std_logic_vector(1 downto 0);
 
-    signal clki_100m        : std_logic;
-    signal btn_rst_n        : std_logic;
-    signal sw               : std_logic_vector(7 downto 0);
-    signal led              : std_logic_vector(7 downto 0);
-
-    signal hdmi_tx_clk_p    : std_logic;
-    signal hdmi_tx_clk_n    : std_logic;
-    signal hdmi_tx_ch_p     : std_logic_vector(0 to 2);
-    signal hdmi_tx_ch_n     : std_logic_vector(0 to 2);
+    signal hdmi_clk_p       : std_logic;
+    signal hdmi_clk_n       : std_logic;
+    signal hdmi_d_p         : std_logic_vector(0 to 2);
+    signal hdmi_d_n         : std_logic_vector(0 to 2);
 
     signal vga_clk          : std_logic;
     signal vga_vs           : std_logic;
@@ -54,58 +50,51 @@ architecture sim of tb_mb_display_sd_nexys_video is
 
 begin
 
-    clki_100m <=
-        '1' after 5ns when clki_100m = '0' else
-        '0' after 5ns when clki_100m = '1' else
+    clki_50m <=
+        '1' after 10ns when clki_50m = '0' else
+        '0' after 10ns when clki_50m = '1' else
         '0';
 
     process
     begin
-        sw <= "000" & dvi & mode;
-        btn_rst_n <= '0';
+        key_n <= "10";
         wait for 20ns;
-        btn_rst_n <= '1';
+        key_n <= "11";
         wait until rising_edge(cap_stb);
         stop;
     end process;
 
     UUT: entity xil_defaultlib.top
         port map (
-            clki_100m       => clki_100m,
-            led             => led,
-            btn_rst_n       => btn_rst_n,
-            oled_res_n      => open,
-            oled_d_c        => open,
-            oled_sclk       => open,
-            oled_sdin       => open,
-            hdmi_tx_clk_p   => hdmi_tx_clk_p,
-            hdmi_tx_clk_n   => hdmi_tx_clk_n,
-            hdmi_tx_ch_p    => hdmi_tx_ch_p,
-            hdmi_tx_ch_n    => hdmi_tx_ch_n,
-            ac_mclk         => open,
-            ac_dac_sdata    => open,
-            uart_rx_out     => open,
-            uart_tx_in      => '1',
-            eth_rst_n       => open,
-            ftdi_rd_n       => open,
-            ftdi_wr_n       => open,
-            ftdi_siwu_n     => open,
-            ftdi_oe_n       => open,
-            ps2_clk         => open,
-            ps2_data        => open,
-            qspi_cs_n       => open
+            clki_50m    => clki_50m,
+            led_n       => led_n,
+            key_n       => key_n,
+            ser_tx      => open,
+            ser_rx      => '1',
+            hdmi_clk_p  => hdmi_clk_p,
+            hdmi_clk_n  => hdmi_clk_n,
+            hdmi_d_p    => hdmi_d_p,
+            hdmi_d_n    => hdmi_d_n,
+            hdmi_scl    => open,
+            hdmi_sda    => open,
+            eth_rst_n   => open,
+            ddr3_rst_n  => open
         );
 
     DECODE: entity xil_defaultlib.model_dvi_decoder
         port map (
-            ch      => hdmi_tx_ch_p,
+
+            ch      => hdmi_d_p,
+
             clk     => vga_clk,
+
             vs      => vga_vs,
             hs      => vga_hs,
             de      => vga_de,
             p(2)    => vga_r,
             p(1)    => vga_g,
             p(0)    => vga_b
+
         );
 
     CAPTURE: entity xil_defaultlib.model_vga_sink

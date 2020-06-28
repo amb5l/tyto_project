@@ -2,11 +2,13 @@
 
 This design generates a video test pattern at resolutions from SD to full HD, and an audio test tone, for HDMI displays.
 
-image::./hdmi_tpg.png[title="Mode 0 (640x480) test pattern.",align="center"]
+Supported boards: *Digilent Nexys Video* and *QMTECH Wukong*.
 
-Note that the 1080p (1485Mbps) modes overclock the TMDS SelectIO outputs of the Xilinx 7-series FPGA.
+image::./hdmi_tpg.png[title="Example display (640x480).",align="center"]
 
-== Getting Started
+Note that the 1080p (1485Mbps) display modes overclock the TMDS SelectIO outputs of the Xilinx 7-series FPGA.
+
+== Build Procedure
 
 The following instructions apply to Windows 10, and require Xilinx Vivado and Vitis version 2020.1 or later to be installed.
 
@@ -17,50 +19,58 @@ To create the Vivado project, and build the FPGA bitstream:
 
   C:\> C:\Xilinx\Vivado\2020.1\settings64.bat
 
-. Run the `xbuild` batch file, specifying the design name and board name as arguments, to create the Vivado project in the `xproj` directory, and to build an FPGA bitstream. The number of parallel jobs to be used during compilation by Vivado may also be specified on the command line; this defaults to 1 if not specified. For example:
+. Run the `xbuild` batch file, specifying the design name (`hdmi_tpg`) and board name (`nexys_video` or `qmtech_wukong`) as arguments, to create the Vivado project in the `xproj` directory, and to build an FPGA bitstream. The number of parallel jobs to be used during compilation by Vivado may also be specified on the command line; this defaults to 1 if not specified. For example:
 
   C:\> cd \work\tyto_project
   C:\work\tyto_project> xbuild.bat hdmi_tpg nexys_video 8
 
 After the build process has completed, the Vivado project may be opened in the Vivado IDE.
 
-To program the bitstream into a Nexys Video board:
+== Programming Procedure
 
-. With the power off, connect the Nexys Video board's *PROG* port to the host PC and its *HDMI OUT* port to the monitor.
-. Power on the Nexys Video board.
-. Run the `xprog` batch file, specifying the design name and board name as arguments. For example:
+First, ensure that the FPGA board is correctly connected to the host PC and the display monitor as follows:
+
+Digilent Nexys Video:: Connect the *PROG* port to the host PC and the *HDMI OUT* port to the monitor.
+
+QMTECH Wukong:: Connect *J1* to a suitable JTAG programmer (e.g. https://reference.digilentinc.com/reference/programmers/jtag-hs2/start[Digilent JTAG-HS2]) and *P3* to the monitor.
+
+To program the bitstream into the board, run the `xprog` batch file, specifying the design name and board name as arguments. For example:
 
   C:\work\tyto_project> xprog.bat hdmi_tpg nexys_video
 
-The monitor should display the image shown in Figure 1 above.
+When the programming process has completed, the monitor should display the image shown in Figure 1 above.
 
-The display mode is set by switches 3..0 as follows (0 = down, 1 = up):
+== Operation
 
-    Mode  SW3..0      Description
-    ====  ======   =================
-     0     0000     640x480p60
-     1     0001     720x480p60 4:3
-     2     0010     720x480p60 16:9
-     3     0011     1280x720p60
-     4     0100     1920x1080i60
-     5     0101     720x480i60 4:3
-     6     0110     720x480i60 16:9
-     7     0111     1920x1080p60
-     8     1000     720x576p50 4:3
-     9     1001     720x576p50 16:9
-     10    1010     1280x720p50
-     11    1011     1920x1080i50
-     12    1100     720x576i50 4:3
-     13    1101     720x576i50 16:9
-     14    1110     1920x1080p50
+The display mode is cycled by pressing a button (BTNC on the Digilent Nexys Video, SW3 on the QMTECH Wukong):
 
-The aspect ratio is signalled by AVI InfoFrames, but this does not work automatically with all HDTVs.
+    Mode   Description
+    ====   =================
+     0     640x480p60
+     1     720x480p60 4:3
+     2     720x480p60 16:9
+     3     1280x720p60
+     4     1920x1080i60
+     5     720x480i60 4:3
+     6     720x480i60 16:9
+     7     1920x1080p60
+     8     720x576p50 4:3
+     9     720x576p50 16:9
+     10    1280x720p50
+     11    1920x1080i50
+     12    720x576i50 4:3
+     13    720x576i50 16:9
+     14    1920x1080p50
 
-Switch 4 sets DVI mode (all HDMI enhancements to TMDS encoding are disabled, including audio).
+Note that the aspect ratio is signalled by AVI InfoFrames, but this does not work automatically with all HDTVs.
 
-LEDs 4..0 reflect the state of switches 4..0.
+On the Nexys Video, switch SW0 sets DVI mode (all HDMI enhancements to TMDS encoding are disabled, including audio).
 
-LEDs 7..5 should be on and steady, showing that the 3 MMCMs are locked (system, video and audio clocks).
+LEDs indicate the current state as follows:
+
+Digilent Nexys Video:: LD7..5 indicate that the system, pixel and audio clocks are locked (flashing at 1Hz); LD4 indicates DVI mode; LD3..0 indicate the current video mode number as 4-bit binary number.
+
+QMTECH Wukong:: D5 indicates the MMCM lock state: 4Hz = all unlocked, 2Hz = partial lock, 1Hz = all locked. D6 shows the LSB of the current binary mode number (on = 1).
 
 == Design Description
 
@@ -98,7 +108,7 @@ The modules shown are described below:
 
 == Simulation
 
-A simulation of the top level (`tb_hdmi_tpg_nexys_video.vhd`) is provided as part of the Vivado project. The UUT is run for long enough to capture a full video frame in each of the 15 video modes. The video capture results are dumped in numbered BMP files. Data packets are extracted and may be inspected using the waveform viewer. Note that simulation run times are substantial.
+A simulation of the top level is provided as part of the Vivado project. The UUT is run for long enough to capture a full video frame in each of the 15 video modes. The video capture results are dumped in numbered BMP files. Data packets are extracted and may be inspected using the waveform viewer. Note that simulation run times are substantial.
 
 ++++
 <style>
