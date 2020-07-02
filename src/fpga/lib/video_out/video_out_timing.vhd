@@ -19,6 +19,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 entity video_out_timing is
     port (
 
@@ -50,23 +53,34 @@ end entity video_out_timing;
 
 architecture synth of video_out_timing is
 
-    signal pos_h_act        : unsigned(h_tot'range);
-    signal pos_h_fp         : unsigned(h_tot'range);
-    signal pos_v_act1       : unsigned(v_tot'range);
-    signal pos_v_fp1        : unsigned(v_tot'range);
-    signal pos_v_mid        : unsigned(v_tot'range);
-    signal pos_v_bp2        : unsigned(v_tot'range);
-    signal pos_v_act2       : unsigned(v_tot'range);
-    signal pos_v_fp2        : unsigned(v_tot'range);
+    signal pix_rep_s        : std_logic;                        -- } synchronised
+    signal interlace_s      : std_logic;                        -- }
+    signal v_tot_s          : std_logic_vector(10 downto 0);    -- }
+    signal v_act_s          : std_logic_vector(10 downto 0);    -- }
+    signal v_sync_s         : std_logic_vector(2 downto 0);     -- }
+    signal v_bp_s           : std_logic_vector(5 downto 0);     -- }
+    signal h_tot_s          : std_logic_vector(11 downto 0);    -- }
+    signal h_act_s          : std_logic_vector(10 downto 0);    -- }
+    signal h_sync_s         : std_logic_vector(6 downto 0);     -- }
+    signal h_bp_s           : std_logic_vector(7 downto 0);     -- }
 
-    signal s1_count_h       : unsigned(h_tot'range);
+    signal pos_h_act        : unsigned(h_tot_s'range);
+    signal pos_h_fp         : unsigned(h_tot_s'range);
+    signal pos_v_act1       : unsigned(v_tot_s'range);
+    signal pos_v_fp1        : unsigned(v_tot_s'range);
+    signal pos_v_mid        : unsigned(v_tot_s'range);
+    signal pos_v_bp2        : unsigned(v_tot_s'range);
+    signal pos_v_act2       : unsigned(v_tot_s'range);
+    signal pos_v_fp2        : unsigned(v_tot_s'range);
+
+    signal s1_count_h       : unsigned(h_tot_s'range);
     signal s1_h_zero        : std_logic;
     signal s1_h_bp          : std_logic;
     signal s1_h_act         : std_logic;
     signal s1_h_mid         : std_logic;
     signal s1_h_fp          : std_logic;
 
-    signal s1_count_v       : unsigned(v_tot'range);
+    signal s1_count_v       : unsigned(v_tot_s'range);
     signal s1_v_zero        : std_logic;
     signal s1_v_bp1         : std_logic;
     signal s1_v_act1        : std_logic;
@@ -90,20 +104,53 @@ architecture synth of video_out_timing is
 
 begin
 
-    pos_h_act       <= resize(unsigned(h_sync),h_tot'length) + resize(unsigned(h_bp),h_tot'length);
-    pos_h_fp        <= pos_h_act + unsigned(h_act);
-    pos_v_act1      <= resize(unsigned(v_sync),v_tot'length) + resize(unsigned(v_bp),v_tot'length);
-    pos_v_fp1       <= pos_v_act1 + unsigned(v_act) when interlace = '0' else pos_v_act1 + shift_right(unsigned(v_act),1);
-    pos_v_mid       <= shift_right(unsigned(v_tot),1);
-    pos_v_bp2       <= pos_v_mid + resize(unsigned(v_sync),v_tot'length);
-    pos_v_act2      <= pos_v_bp2 + resize(unsigned(v_bp),v_tot'length) + 1;
-    pos_v_fp2       <= pos_v_act2 + shift_right(unsigned(v_act),1);
+    SYNC : xpm_cdc_array_single
+        generic map (
+            DEST_SYNC_FF    => 2,
+            INIT_SYNC_FF    => 1,
+            SIM_ASSERT_CHK  => 1,
+            SRC_INPUT_REG   => 0,
+            WIDTH           => 71
+        )
+        port map (
+            src_clk                => '0',
+            src_in(70)             => pix_rep,
+            src_in(69)             => interlace,
+            src_in(68 downto 58)   => v_tot,
+            src_in(57 downto 47)   => v_act,
+            src_in(46 downto 44)   => v_sync,
+            src_in(43 downto 38)   => v_bp,
+            src_in(37 downto 26)   => h_tot,
+            src_in(25 downto 15)   => h_act,
+            src_in(14 downto 8)    => h_sync,
+            src_in(7 downto 0)     => h_bp,
+            dest_clk               => clk,
+            dest_out(70)           => pix_rep_s,
+            dest_out(69)           => interlace_s,
+            dest_out(68 downto 58) => v_tot_s,
+            dest_out(57 downto 47) => v_act_s,
+            dest_out(46 downto 44) => v_sync_s,
+            dest_out(43 downto 38) => v_bp_s,
+            dest_out(37 downto 26) => h_tot_s,
+            dest_out(25 downto 15) => h_act_s,
+            dest_out(14 downto 8)  => h_sync_s,
+            dest_out(7 downto 0)   => h_bp_s
+        );
 
-    s1_h_bp         <= '1' when s1_count_h = resize(unsigned(h_sync),h_tot'length) else '0';
+    pos_h_act       <= resize(unsigned(h_sync_s),h_tot_s'length) + resize(unsigned(h_bp_s),h_tot_s'length);
+    pos_h_fp        <= pos_h_act + unsigned(h_act_s);
+    pos_v_act1      <= resize(unsigned(v_sync_s),v_tot_s'length) + resize(unsigned(v_bp_s),v_tot_s'length);
+    pos_v_fp1       <= pos_v_act1 + unsigned(v_act_s) when interlace_s = '0' else pos_v_act1 + shift_right(unsigned(v_act_s),1);
+    pos_v_mid       <= shift_right(unsigned(v_tot_s),1);
+    pos_v_bp2       <= pos_v_mid + resize(unsigned(v_sync_s),v_tot_s'length);
+    pos_v_act2      <= pos_v_bp2 + resize(unsigned(v_bp_s),v_tot_s'length) + 1;
+    pos_v_fp2       <= pos_v_act2 + shift_right(unsigned(v_act_s),1);
+
+    s1_h_bp         <= '1' when s1_count_h = resize(unsigned(h_sync_s),h_tot_s'length) else '0';
     s1_h_act        <= '1' when s1_count_h = pos_h_act else '0';
-    s1_h_mid        <= '1' when s1_count_h = shift_right(unsigned(h_tot),1) else '0';
+    s1_h_mid        <= '1' when s1_count_h = shift_right(unsigned(h_tot_s),1) else '0';
     s1_h_fp         <= '1' when s1_count_h = pos_h_fp else '0';
-    s1_v_bp1        <= '1' when s1_count_v = resize(unsigned(v_sync),v_tot'length) else '0';
+    s1_v_bp1        <= '1' when s1_count_v = resize(unsigned(v_sync_s),v_tot_s'length) else '0';
     s1_v_act1       <= '1' when s1_count_v = pos_v_act1 else '0';
     s1_v_fp1        <= '1' when s1_count_v = pos_v_fp1 else '0';
     s1_v_mid        <= '1' when s1_count_v = pos_v_mid else '0';
@@ -145,10 +192,10 @@ begin
                 -- pipeline stage 1
 
                 if align_hold = '0' then
-                    if s1_count_h = unsigned(h_tot)-1 then
+                    if s1_count_h = unsigned(h_tot_s)-1 then
                         s1_count_h <= (others => '0');
                         s1_h_zero <= '1';
-                        if s1_count_v = unsigned(v_tot)-1 then
+                        if s1_count_v = unsigned(v_tot_s)-1 then
                             s1_count_v <= (others => '0');
                             s1_v_zero <= '1';
                             if align /= (align'range => '0') then
@@ -187,7 +234,7 @@ begin
                 if s1_v_bp1 = '1' and s1_h_zero = '1' then
                    s2_vs <= '0';
                 end if;
-                if interlace = '1' then -- handle field 2
+                if interlace_s = '1' then -- handle field 2
                     if s1_v_mid = '1' and s1_h_mid = '1' then
                         s2_f <= '1';
                         s2_vs <= '1';
@@ -229,7 +276,7 @@ begin
                 end if;
 
                 -- ay
-                if interlace = '1' then
+                if interlace_s = '1' then
                     if s1_v_mid = '1' and s1_h_mid = '1' then
                         s2_ay <= shift_left(signed('0' & pos_v_mid)-signed('0' & pos_v_act2),1);
                         s2_ay(0) <= '1';

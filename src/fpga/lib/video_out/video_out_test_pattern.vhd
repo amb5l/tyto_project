@@ -19,6 +19,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 entity video_out_test_pattern is
     port (
 
@@ -53,7 +56,11 @@ end entity video_out_test_pattern;
 
 architecture synth of video_out_test_pattern is
 
-    signal h_act_r     : std_logic_vector(h_act'range);   -- input adjusted for pixel repetition
+    signal pix_rep_s   : std_logic;                         -- } synchronised
+    signal v_act_s     : std_logic_vector(10 downto 0);     -- }
+    signal h_act_s     : std_logic_vector(10 downto 0);     -- }
+
+    signal h_act_r     : std_logic_vector(h_act_s'range);   -- input adjusted for pixel repetition
     signal raw_ax_r    : std_logic_vector(raw_ax'range);  -- "
 
     signal cbs         : unsigned(15 downto 0);             -- colour bar scale coefficient
@@ -75,11 +82,30 @@ architecture synth of video_out_test_pattern is
 
 begin
 
-    h_act_r <= h_act when pix_rep = '0' else '0' & h_act(h_act'length-1 downto 1);
-    raw_ax_r <= raw_ax when pix_rep = '0' else '0' & raw_ax(raw_ax'length-1 downto 1);
+    SYNC : xpm_cdc_array_single
+        generic map (
+            DEST_SYNC_FF    => 2,
+            INIT_SYNC_FF    => 1,
+            SIM_ASSERT_CHK  => 1,
+            SRC_INPUT_REG   => 0,
+            WIDTH           => 23
+        )
+        port map (
+            src_clk                => '0',
+            src_in(22)             => pix_rep,
+            src_in(21 downto 11)   => v_act,
+            src_in(10 downto 0)    => h_act,
+            dest_clk               => clk,
+            dest_out(22)           => pix_rep_s,
+            dest_out(21 downto 11) => v_act_s,
+            dest_out(10 downto 0)  => h_act_s
+        );
+
+    h_act_r <= h_act_s when pix_rep_s = '0' else '0' & h_act_s(h_act_s'length-1 downto 1);
+    raw_ax_r <= raw_ax when pix_rep_s = '0' else '0' & raw_ax(raw_ax'length-1 downto 1);
 
     s0_cbx <= signed(raw_ax_r) - resize(signed('0' & h_act_r(h_act_r'length-1 downto 2)),raw_ax_r'length); -- colour bar region x pos
-    s0_cby <= signed(raw_ay) - resize(signed('0' & v_act(v_act'length-1 downto 2)),raw_ay'length); -- colour bar region y pos
+    s0_cby <= signed(raw_ay) - resize(signed('0' & v_act_s(v_act_s'length-1 downto 2)),raw_ay'length); -- colour bar region y pos
 
     process(rst,clk)
 
@@ -862,28 +888,28 @@ begin
 
     begin
 
-        if rst = '1' then
+--        if rst = '1' then
 
-            cbs         <= (others => '0');
-            s1_vs       <= '0';
-            s1_hs       <= '0';
-            s1_vblank   <= '1';
-            s1_hblank   <= '1';
-            s1_border   <= '0';
-            s1_cbe_x    <= '0';
-            s1_cbe_y    <= '0';
-            s1_cbv      <= (others => '0');
-            s1_cbs      <= (others => '0');
+--            cbs         <= (others => '0');
+--            s1_vs       <= '0';
+--            s1_hs       <= '0';
+--            s1_vblank   <= '1';
+--            s1_hblank   <= '1';
+--            s1_border   <= '0';
+--            s1_cbe_x    <= '0';
+--            s1_cbe_y    <= '0';
+--            s1_cbv      <= (others => '0');
+--            s1_cbs      <= (others => '0');
 
-            vga_vs      <= '0';
-            vga_hs      <= '0';
-            vga_vblank  <= '1';
-            vga_hblank  <= '1';
-            vga_r       <= (others => '0');
-            vga_g       <= (others => '0');
-            vga_b       <= (others => '0');
+--            vga_vs      <= '0';
+--            vga_hs      <= '0';
+--            vga_vblank  <= '1';
+--            vga_hblank  <= '1';
+--            vga_r       <= (others => '0');
+--            vga_g       <= (others => '0');
+--            vga_b       <= (others => '0');
 
-        elsif rising_edge(clk) then
+        if rising_edge(clk) then
 
             -- infer synchronous 1k x 16 ROM
             cbs <= cbscale(unsigned(h_act_r(h_act_r'length-1 downto 1)));
@@ -899,8 +925,8 @@ begin
                 (shift_right(signed(raw_ay),1) = 0) or   -- top
                 (signed(raw_ax_r) = resize(signed('0' & h_act_r),raw_ax_r'length)-2) or  -- right
                 (signed(raw_ax_r) = resize(signed('0' & h_act_r),raw_ax_r'length)-1) or  -- right
-                (signed(raw_ay) = resize(signed('0' & v_act),raw_ay'length)-2) or  -- bottom
-                (signed(raw_ay) = resize(signed('0' & v_act),raw_ay'length)-1)     -- bottom
+                (signed(raw_ay) = resize(signed('0' & v_act_s),raw_ay'length)-2) or  -- bottom
+                (signed(raw_ay) = resize(signed('0' & v_act_s),raw_ay'length)-1)     -- bottom
             then
                 s1_border <= '1';
             end if;
@@ -910,16 +936,16 @@ begin
             if s0_cbx = shift_right(resize(signed('0' & h_act_r),s0_cbx'length),1) then
                 s1_cbe_x <= '0';
             end if;
-            if s0_cby >= signed(shift_right(unsigned(v_act),1)) then
+            if s0_cby >= signed(shift_right(unsigned(v_act_s),1)) then
                 s1_cbe_y <= '0';
                 s1_cbs <= "00";
-            elsif s0_cby >= signed(shift_right(unsigned(v_act),2)+shift_right(unsigned(v_act),3)) then
+            elsif s0_cby >= signed(shift_right(unsigned(v_act_s),2)+shift_right(unsigned(v_act_s),3)) then
                 s1_cbe_y <= '1';
                 s1_cbs <= "11";
-            elsif s0_cby >= signed(shift_right(unsigned(v_act),2)) then
+            elsif s0_cby >= signed(shift_right(unsigned(v_act_s),2)) then
                 s1_cbe_y <= '1';
                 s1_cbs <= "10";
-            elsif s0_cby >= signed(shift_right(unsigned(v_act),3)) then
+            elsif s0_cby >= signed(shift_right(unsigned(v_act_s),3)) then
                 s1_cbe_y <= '1';
                 s1_cbs <= "01";
             elsif s0_cby >= 0 then
@@ -948,8 +974,8 @@ begin
                     (s0_cbx(s0_cbx'length-1 downto 1) = shift_right(resize(signed('0' & h_act_r(h_act_r'length-1 downto 1)),s0_cbx'length),2)) or   -- 1/2 h
                     (s0_cbx(s0_cbx'length-1 downto 1) = shift_right(resize(signed('0' & h_act_r(h_act_r'length-1 downto 1)),s0_cbx'length),1)) or   -- 3/4 h
                     (s0_cby(s0_cby'length-1 downto 1) = 0) or                                                                                   -- 1/4 v
-                    (s0_cby(s0_cby'length-1 downto 1) = shift_right(resize(signed('0' & v_act(v_act'length-1 downto 1)),s0_cby'length),2)) or   -- 1/2 v
-                    (s0_cby(s0_cby'length-1 downto 1) = shift_right(resize(signed('0' & v_act(v_act'length-1 downto 1)),s0_cby'length),1))      -- 3/4 v
+                    (s0_cby(s0_cby'length-1 downto 1) = shift_right(resize(signed('0' & v_act_s(v_act_s'length-1 downto 1)),s0_cby'length),2)) or   -- 1/2 v
+                    (s0_cby(s0_cby'length-1 downto 1) = shift_right(resize(signed('0' & v_act_s(v_act_s'length-1 downto 1)),s0_cby'length),1))      -- 3/4 v
                 then
                     vga_r <= x"80"; vga_b <= x"80"; vga_g <= x"80";
                 -- colour bars

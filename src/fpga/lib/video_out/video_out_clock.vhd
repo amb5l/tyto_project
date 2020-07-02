@@ -19,6 +19,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 library unisim;
 use unisim.vcomponents.all;
 
@@ -42,7 +45,9 @@ end entity video_out_clock;
 
 architecture structural of video_out_clock is
 
-    signal rsto_req    : std_logic;                        -- rsto request, synchronouse to sys_clk
+    signal sel_s        : std_logic_vector(1 downto 0);     -- sel, synchronised to sys_clk
+
+    signal rsto_req     : std_logic;                        -- rsto request, synchronous e to sys_clk
 
     signal locked       : std_logic;                        -- MMCM locked output
     signal sel_prev     : std_logic_vector(1 downto 0);     -- to detect changes
@@ -62,7 +67,6 @@ architecture structural of video_out_clock is
     signal cfg_do       : std_logic_vector(15 downto 0);    -- DRP read data
     signal cfg_drdy     : std_logic;                        -- DRP access complete
 
-    signal rsto_req_s  : std_logic;
     signal locked_s     : std_logic;
 
     type cfg_state_t is ( -- state machine states
@@ -192,9 +196,11 @@ begin
     begin
         if sys_rst = '1' then -- full reset
 
-            sel_prev  <= (others => '0');
+            sel_prev    <= (others => '0');
             cfg_rst     <= '1';
             cfg_daddr   <= (others => '0');
+            cfg_den     <= '0';
+            cfg_dwe     <= '0';
             cfg_di      <= (others => '0');
             cfg_state   <= RESET;
 
@@ -259,24 +265,41 @@ begin
         end if;
     end process;
 
-    rsto <= rsto_req_s or not locked;
+    -- clock domain crossing
 
-    SYNC1: entity work.double_sync
+    SYNC1 : xpm_cdc_array_single
+        generic map (
+            DEST_SYNC_FF    => 2,
+            INIT_SYNC_FF    => 1,
+            SIM_ASSERT_CHK  => 1,
+            SRC_INPUT_REG   => 0,
+            WIDTH           => 3
+        )
         port map (
-            rst => '0',
-            clk => sys_clk,
-            d   => locked,
-            q   => locked_s
+            src_clk     => '0',
+            src_in(0)   => locked,
+            src_in(1)   => sel(0),
+            src_in(2)   => sel(1),
+            dest_clk    => sys_clk,
+            dest_out(0) => locked_s,
+            dest_out(1) => sel_s(0),
+            dest_out(2) => sel_s(1)
         );
 
-    SYNC2: entity work.double_sync
+    SYNC2 : xpm_cdc_array_single
+        generic map (
+            DEST_SYNC_FF    => 2,
+            INIT_SYNC_FF    => 1,
+            SIM_ASSERT_CHK  => 1,
+            SRC_INPUT_REG   => 0,
+            WIDTH           => 1
+        )
         port map (
-            rst => '0',
-            clk => clko,
-            d   => rsto_req,
-            q   => rsto_req_s
+            src_clk     => '0',
+            src_in(0)   => rsto_req or not locked,
+            dest_clk    => clko,
+            dest_out(0) => rsto
         );
-
 
     -- defaults: clk_s = 371.25MHz, clko = 74.25MHz (for clki = 100MHz)
     MMCM: mmcme2_adv
