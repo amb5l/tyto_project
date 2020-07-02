@@ -168,7 +168,7 @@ begin
             case period is
 
                 when UNKNOWN =>
-                    if tmds_type = (tmds_type'range => CTRL) then
+                    if tmds_type = (tmds_type'range => CTRL) and c = (c'range => "00") then
                         period := CONTROL; pcount := 0;
                     end if;
 
