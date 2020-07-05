@@ -38,8 +38,8 @@ architecture sim of tb_hdmi_tpg_nexys_video is
 
     signal hdmi_tx_clk_p    : std_logic;
     signal hdmi_tx_clk_n    : std_logic;
-    signal hdmi_tx_ch_p     : std_logic_vector(0 to 2);
-    signal hdmi_tx_ch_n     : std_logic_vector(0 to 2);
+    signal hdmi_tx_d_p      : std_logic_vector(0 to 2);
+    signal hdmi_tx_d_n      : std_logic_vector(0 to 2);
 
     signal pix_rst      : std_logic;
     signal pix_clk      : std_logic;
@@ -77,12 +77,11 @@ begin
         pix_rst <= '1';
         wait for 20ns;
         btn_rst_n <= '1';
-        wait until rising_edge(pix_clk);
-        wait until rising_edge(pix_clk);
-        pix_rst <= '0';
-
         loop
+            wait for 20us;
+            pix_rst <= '0';
             wait until rising_edge(cap_stb);
+            pix_rst <= '1';
             mode := mode + 1;
             if mode = 15 then
                 exit;
@@ -107,8 +106,8 @@ begin
             oled_sdin       => open,
             hdmi_tx_clk_p   => hdmi_tx_clk_p,
             hdmi_tx_clk_n   => hdmi_tx_clk_n,
-            hdmi_tx_ch_p    => hdmi_tx_ch_p,
-            hdmi_tx_ch_n    => hdmi_tx_ch_n,
+            hdmi_tx_d_p     => hdmi_tx_d_p,
+            hdmi_tx_d_n     => hdmi_tx_d_n,
             ac_mclk         => open,
             ac_dac_sdata    => open,
             uart_rx_out     => open,
@@ -125,7 +124,7 @@ begin
     DECODE: entity work.model_hdmi_decoder
         port map (
             rst     => pix_rst,
-            ch      => hdmi_tx_ch_p,
+            ch      => hdmi_tx_d_p,
             clk     => pix_clk,
             pstb    => data_pstb,
             hb      => data_hb,
@@ -145,7 +144,7 @@ begin
             name        => "tb_hdmi_tpg_nexys_video"
         )
         port map (
-            rst         => '0',
+            rst         => pix_rst,
             clk         => pix_clk,
             vs          => vga_vs,
             hs          => vga_hs,

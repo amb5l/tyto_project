@@ -68,7 +68,7 @@ On the Nexys Video, switch SW0 sets DVI mode (all HDMI enhancements to TMDS enco
 
 LEDs indicate the current state as follows:
 
-Digilent Nexys Video:: LD7..5 indicate that the system, pixel and audio clocks are locked (flashing at 1Hz); LD4 indicates DVI mode; LD3..0 indicate the current video mode number as 4-bit binary number.
+Digilent Nexys Video:: LD7 is a heartbeat; it flashes at 1Hz in normal (HDMI) mode, and 4Hz in DVI mode. LD6..4 indicate that the system, pixel and audio clocks are locked. LD3..0 indicate the current video mode number as 4-bit binary number.
 
 QMTECH Wukong:: D5 indicates the MMCM lock state: 4Hz = all unlocked, 2Hz = partial lock, 1Hz = all locked. D6 shows the LSB of the current binary mode number (on = 1).
 
@@ -78,33 +78,40 @@ The diagram below shows the main design blocks:
 
 image::./hdmi_tpg.svg[title="Block diagram of the hdmi_tpg design.",align="center"]
 
-The modules shown are described below:
+The blocks shown are described below:
 
-`top`:: A board specific wrapper around the main design.
+top:: A board specific wrapper around the main design. Note that the QMTECH Wukong board's system clock is 50MHz; this is doubled by an MMCM to get a 100MHz reference frequency which works well as a basis for synthesising the required video and audio clocks.
 
-`hdmi_tpg`:: The main design.
+hdmi tpg:: The main design.
 
-`clock_100m`:: An MMCM configured to generate a 100MHz system clock from a 100MHz reference.
+clock 100m:: An MMCM configured to generate a 100MHz system clock from a 100MHz reference.
 
-`audio_out_test_tone`:: This module produces alternating test tones (A4 to the left channel, A3 to the right channel). The `audio_clock` module instantiated within it comprises an MMCM configured to generate 256 _Fs_ (12.288MHz) from the 100MHz reference clock, and a counter to generate an _Fs_ (48kHz) clock enable.
+video out clock:: An MMCM and associated buffers, and logic to dynamically reconfigure the MMCM. Synthesises the pixel and serialiser clocks required by the current video mode.
 
-`hdmi_out`:: Top level of the HDMI output module.
+audio out test tone:: This module produces alternating test tones (A4 to the left channel, A3 to the right channel). The `audio_clock` module instantiated within it comprises an MMCM configured to generate 256 _Fs_ (12.288MHz) from the 100MHz reference clock, and a counter to generate an _Fs_ (48kHz) clock enable.
 
-`video_mode`:: Converts a 4-bit mode number into a full set of video timing parameters (sync, blank, active etc). The source data is containied in the `video_mode.xls` spreadsheet, which can be edited and converted to VHDL by saving it as CSV and then running the `video_mode.py` Python script.
+video mode step:: This process increments the 4-bit video mode number when a button is pressed.
 
-`video_out_clock`:: An MMCM and associated buffers, and logic to dynamically reconfigure the MMCM to synthesise the pixel and serialiser clocks required by the current video mode.
+video mode:: Converts the 4-bit video mode number into a full set of video timing parameters (sync, blank, active etc). The source data is containied in the `video_mode.xls` spreadsheet, which can be edited and converted to VHDL by saving it as CSV and then running the `video_mode.py` Python script.
 
-`video_out_timing`:: Synthesises basic video timing.
+video out timing:: Synthesises basic video timing.
 
-`video_out_test_pattern`:: Generates the test pattern image (an array of vertical and horizontal lines, with colour bars.) Includes a table of reciprocals to smoothly scale the colour ramps in the centre of the image.
+video out test pattern:: Generates the test pattern image (an array of vertical and horizontal lines, with colour bars.) Includes a table of reciprocals to smoothly scale the colour ramps in the centre of the image for the current output resolution.
 
-`hdmi_tx_pcm`:: Adds synchronisation and channel status per IEC60958 to a PCM sample stream.
+ACR strobe:: This process generates a 1kHz strobe to ensure Audio Clock Reconstruction packets are transmitted at the intervals required by the HDMI specification.
 
-`hdmi_tx_data_injector`:: Injects data islands, placed in the video blanking intervals. 2 packets are generated just after the beginning of horizontal sync every line for audio samples and audio clock regeneration (ACR). On the line just above the active area, an additional 2 packets are generated (audio and video InfoFrames). Packets that are not needed (e.g. because there are no audio samples to be transmitted at the time that the packet is being output) are stuffed with zeroes; these null packets are ignored by the sink.
+vga to hdmi:: Top level of the VGA to HDMI conversion IP core.
 
-`hdmi_tx_encoder`:: Uses the HDMI specification's recipe for TMDS encoding to create 10-bit TMDS/TERC4 symbols.
+IEC60958 formatting:: Formats the parallel PCM sample stream into frames with channel status in accordance with IEC60958-3.
 
-`tmds_tx_serialiser_selectio`:: Converts the 10-bit symbol stream from parallel to serial for each HDMI output channel, and is also used to generate a HDMI (pixel) clock. Drives out via SelectIO (TMDS differential) buffers.
+inject:: The HDMI specification enhances the TMDS encoding of the DVI specification to allow extra data to be carried in video blanking periods. This process delays incoming video to detect and measure these blanking periods, so that the following can be inserted:
+
+  * video preambles and guard bands
+  * data islands - preamble, leading guard band, packet(s), trailing guard band
+
+hdmi tx encoder:: Follows the HDMI specification's recipe for TMDS encoding to create 10-bit TMDS/TERC4 symbols.
+
+tmds tx serialiser selectio:: Converts the 10-bit symbol stream from parallel to serial for each HDMI output channel, and is also used to generate a HDMI (pixel) clock. Drives out via SelectIO (TMDS differential) buffers.
 
 == Simulation
 

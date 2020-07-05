@@ -17,7 +17,7 @@
 
 # clock
 
-create_clock -add -name clki_50m -period 20.00 -waveform {0 10} [get_ports clki_50m]
+create_clock -add -name clki_50m -period 20.00 [get_ports clki_50m]
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets {clki_50m_IBUF}]
 
 #------------------------------------------------------------------------------
@@ -29,6 +29,7 @@ set_property -dict { PACKAGE_PIN H6 IOSTANDARD LVCMOS33 }               [get_por
 set_property -dict { PACKAGE_PIN H7 IOSTANDARD LVCMOS33 }               [get_ports { key_n[0] }];           # SW2, net KEY0
 set_property -dict { PACKAGE_PIN J8 IOSTANDARD LVCMOS33 }               [get_ports { key_n[1] }];           # SW3, net KEY1
 set_property -dict { PACKAGE_PIN E3 IOSTANDARD LVCMOS33 }               [get_ports { ser_tx }];             # net BANK35_E3
+# set_property -dict { PACKAGE_PIN F3 IOSTANDARD LVCMOS33 }               [get_ports { ser_rx }];             # net BANK35_F3
 set_property -dict { PACKAGE_PIN D4 IOSTANDARD TMDS_33 }                [get_ports { hdmi_clk_p }];         # net BANK35_D4
 set_property -dict { PACKAGE_PIN C4 IOSTANDARD TMDS_33 }                [get_ports { hdmi_clk_n }];         # net BANK35_C4
 set_property -dict { PACKAGE_PIN E1 IOSTANDARD TMDS_33 }                [get_ports { hdmi_d_p[0] }];        # net BANK35_E1
@@ -39,13 +40,9 @@ set_property -dict { PACKAGE_PIN G2 IOSTANDARD TMDS_33 }                [get_por
 set_property -dict { PACKAGE_PIN G1 IOSTANDARD TMDS_33 }                [get_ports { hdmi_d_n[2] }];        # net BANK35_G1
 set_property -dict { PACKAGE_PIN B2 IOSTANDARD LVCMOS33 PULLUP TRUE }   [get_ports { hdmi_scl }];           # net BANK35_B2
 set_property -dict { PACKAGE_PIN A2 IOSTANDARD LVCMOS33 PULLUP TRUE }   [get_ports { hdmi_sda }];           # net BANK35_A2
-set_property -dict { PACKAGE_PIN R1 IOSTANDARD LVCMOS33 }               [get_ports { eth_rst_n }];          # net BANK34_R1
-set_property -dict { PACKAGE_PIN H17 IOSTANDARD LVCMOS15 }              [get_ports { ddr3_rst_n }];         # net DDR_RESETN
-
-# unused IOs in this design
-# set_property -dict { PACKAGE_PIN F3 IOSTANDARD LVCMOS33 }               [get_ports { ser_rx }];             # net BANK35_F3
 # set_property -dict { PACKAGE_PIN B1 IOSTANDARD LVCMOS33 }               [get_ports { hdmi_cec }];           # net BANK35_B1
 # set_property -dict { PACKAGE_PIN A3 IOSTANDARD LVCMOS33 }               [get_ports { hdmi_hpd }];           # net BANK35_A3
+set_property -dict { PACKAGE_PIN R1 IOSTANDARD LVCMOS33 }               [get_ports { eth_rst_n }];          # net BANK34_R1
 # set_property -dict { PACKAGE_PIN U1 IOSTANDARD LVCMOS33 }               [get_ports { eth_gtx_clk }];        # net BANK34_U1
 # set_property -dict { PACKAGE_PIN M2 IOSTANDARD LVCMOS33 }               [get_ports { eth_txclk }];          # net BANK34_M2
 # set_property -dict { PACKAGE_PIN T2 IOSTANDARD LVCMOS33 }               [get_ports { eth_txen }];           # net BANK34_T2
@@ -73,6 +70,7 @@ set_property -dict { PACKAGE_PIN H17 IOSTANDARD LVCMOS15 }              [get_por
 # set_property -dict { PACKAGE_PIN U4 IOSTANDARD LVCMOS33 }               [get_ports { eth_col }];            # net BANK34_U4
 # set_property -dict { PACKAGE_PIN H2 IOSTANDARD LVCMOS33 }               [get_ports { eth_mdc }];            # net BANK34_H2
 # set_property -dict { PACKAGE_PIN H1 IOSTANDARD LVCMOS33 }               [get_ports { eth_mdio }];           # net BANK34_H1
+set_property -dict { PACKAGE_PIN H17 IOSTANDARD LVCMOS15 }              [get_ports { ddr3_rst_n }];         # net DDR_RESETN
 # set_property -dict { PACKAGE_PIN F18}                                   [get_ports { ddr3_clk_p }];         # net DDR_CLK+
 # set_property -dict { PACKAGE_PIN F19}                                   [get_ports { ddr3_clk_n }];         # net DDR_CLK-
 # set_property -dict { PACKAGE_PIN E18}                                   [get_ports { ddr3_cke }];           # net DDR_CKE
