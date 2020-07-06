@@ -9,9 +9,7 @@ if {$xbuild_board == "nexys_video"} {
 set vhdl_files [list \
     "dsn/${xbuild_design}/${xbuild_design}_${xbuild_board}.vhd" \
     "dsn/${xbuild_design}/${xbuild_design}.vhd" \
-    "lib/misc/types_pkg.vhd" \
     "lib/misc/clock_100m.vhd" \
-    "lib/misc/double_sync.vhd" \
     "lib/audio_io/audio_clock.vhd" \
     "lib/audio_io/audio_axis.vhd" \
     "lib/audio_io/audio_i2s.vhd" \
