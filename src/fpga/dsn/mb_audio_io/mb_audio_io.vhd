@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
--- demo_audio_io.vhd                                                          --
+-- mb_audio_io.vhd                                                            --
 -- A simple I2S audio I/O demonstration, powered by a Microblaze CPU.         --
 --------------------------------------------------------------------------------
 -- (C) Copyright 2020 Adam Barnes <ambarnes@gmail.com>                        --
@@ -17,10 +17,11 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 library xil_defaultlib;
 
-entity demo_audio_io is
+entity mb_audio_io is
     generic (
 
         fref        : real                                  -- reference clock frequency (MHz)
@@ -30,16 +31,17 @@ entity demo_audio_io is
 
         ext_rst     : in    std_logic;                      -- external reset (asynchronous)
         ref_clk     : in    std_logic;                      -- reference clock (for MMCMs)
-        sys_rst     : out   std_logic;                      -- system reset (synchronous to system clock)
-        sys_clk     : out   std_logic;                      -- system clock (100MHz)
 
-        led         : out   std_logic_vector(7 downto 0);
+        heartbeat   : out   std_logic_vector(3 downto 0);   -- 4 bit count @ 8Hz (heartbeat for LEDs)
+        status      : out   std_logic_vector(2 downto 0);   -- MMCM lock status
 
-        uart_tx     : out   std_logic;
-        uart_rx     : in    std_logic;
+        gpo         : out   std_logic_vector(7 downto 0);
 
-        i2c_scl     : inout std_logic;
-        i2c_sda     : inout std_logic;
+        uart_tx     : out   std_logic;                      -- } CPU serial port 
+        uart_rx     : in    std_logic;                      -- }
+
+        i2c_scl     : inout std_logic;                      -- I2C clock } access to
+        i2c_sda     : inout std_logic;                      -- I2C data  }  codec registers
 
         i2s_mclk    : out   std_logic;                      -- main codec clock (256Fs)
         i2s_bclk    : out   std_logic;                      -- bit clock (64Fs)
@@ -48,16 +50,18 @@ entity demo_audio_io is
         i2s_sdi     : in    std_logic                       -- serial data in
 
     );
-end entity demo_audio_io;
+end entity mb_audio_io;
 
-architecture synth of demo_audio_io is
+architecture synth of mb_audio_io is
+
+    signal sys_rst          : std_logic;                      -- system reset (synchronous to system clock)
+    signal sys_clk          : std_logic;                      -- system clock (100MHz)
+    signal sys_clken_1khz   : std_logic;                      -- system clock enable @ 1kHz
 
     signal cpu_rst          : std_logic;
     signal pcm_rst          : std_logic;
     signal pcm_clk          : std_logic;
     signal pcm_clken        : std_logic;
-
-    signal gpo              : std_logic_vector(7 downto 0);
 
     signal fifo_tx_data     : std_logic_vector(31 downto 0);
     signal fifo_tx_valid    : std_logic;
@@ -76,10 +80,43 @@ architecture synth of demo_audio_io is
 
 begin
 
-    led(4 downto 0) <= gpo(4 downto 0);
-    led(5) <= not pcm_rst;
-    led(6) <= not cpu_rst;
-    led(7) <= not sys_rst;
+    status(0) <= not sys_rst;   -- system clock MMCM locked
+    status(1) <= not cpu_rst;   -- CPU out of reset
+    status(2) <= not pcm_rst;   -- audio clock MMCM locked
+
+    DO_1KHZ: process(sys_rst,sys_clk)
+        variable counter : integer range 0 to 99999;
+    begin
+        if sys_rst = '1' then
+            counter := 0;
+            sys_clken_1khz <= '0';
+        elsif rising_edge(sys_clk) then
+            if counter = 99999 then
+                counter := 0;
+                sys_clken_1khz <= '1';
+            else
+                counter := counter + 1;
+                sys_clken_1khz <= '0';
+            end if;
+        end if;
+    end process DO_1KHZ;
+
+    -- 4 bit counter @ 1Hz => 0.5Hz, 1Hz, 2Hz and 4Hz heartbeat pulses for LEDs
+    DO_HEARTBEAT: process(sys_rst,sys_clk,sys_clken_1khz)
+        variable counter : integer range 0 to 124;
+    begin
+        if sys_rst = '1' then
+            counter := 0;
+            heartbeat <= (others => '0');
+        elsif rising_edge(sys_clk) and sys_clken_1khz = '1' then
+            if counter = 124 then
+                counter := 0;
+                heartbeat <= std_logic_vector(unsigned(heartbeat)+1);
+            else
+                counter := counter + 1;
+            end if;
+        end if;
+    end process DO_HEARTBEAT;
 
     CLOCK_100M: entity xil_defaultlib.clock_100m
         generic map (

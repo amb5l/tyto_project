@@ -91,6 +91,7 @@ begin
     begin
         if locked = '0' then
             count <= 0;
+            clken <= '0';
         elsif rising_edge(clk) then
             clken <= '0';
             if count = ratio-1 then

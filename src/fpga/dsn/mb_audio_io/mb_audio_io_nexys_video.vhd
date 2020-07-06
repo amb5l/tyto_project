@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
--- demo_audio_io_nexys_video.vhd                                              --
--- Board specific top level wrapper for the demo_audio_io design.             --
+-- mb_audio_io_nexys_video.vhd                                                --
+-- Board specific top level wrapper for the mb_audio_io design.               --
 --------------------------------------------------------------------------------
 -- (C) Copyright 2020 Adam Barnes <ambarnes@gmail.com>                        --
 -- This file is part of The Tyto Project. The Tyto Project is free software:  --
@@ -25,49 +25,49 @@ entity top is
 
         -- clocks
         clki_100m       : in    std_logic;
-        gtp_clk_p       : in    std_logic;
-        gtp_clk_n       : in    std_logic;
-        fmc_mgt_clk_p   : in    std_logic;
-        fmc_mgt_clk_n   : in    std_logic;
+--      gtp_clk_p       : in    std_logic;
+--      gtp_clk_n       : in    std_logic;
+--      fmc_mgt_clk_p   : in    std_logic;
+--      fmc_mgt_clk_n   : in    std_logic;
 
         -- LEDs, buttons and switches
         led             : out   std_logic_vector(7 downto 0);
-        btn_c           : in    std_logic;
-        btn_d           : in    std_logic;
-        btn_l           : in    std_logic;
-        btn_r           : in    std_logic;
-        btn_u           : in    std_logic;
+--      btn_c           : in    std_logic;
+--      btn_d           : in    std_logic;
+--      btn_l           : in    std_logic;
+--      btn_r           : in    std_logic;
+--      btn_u           : in    std_logic;
         btn_rst_n       : in    std_logic;
-        sw              : in    std_logic_vector(7 downto 0);
+--      sw              : in    std_logic_vector(7 downto 0);
 
         -- OLED
         oled_res_n      : out   std_logic;
         oled_d_c        : out   std_logic;
         oled_sclk       : out   std_logic;
         oled_sdin       : out   std_logic;
-        oled_vbat_dis   : out   std_logic;
-        oled_vdd_dis    : out   std_logic;
+--      oled_vbat_dis   : out   std_logic;
+--      oled_vdd_dis    : out   std_logic;
 
         -- HDMI RX
 --      hdmi_rx_clk_p   : in    std_logic;
 --      hdmi_rx_clk_n   : in    std_logic;
---      hdmi_rx_ch_p    : in    std_logic_vector(0 to 2);
---      hdmi_rx_ch_n    : in    std_logic_vector(0 to 2);
-        hdmi_rx_scl     : in    std_logic;
-        hdmi_rx_sda     : inout std_logic;
-        hdmi_rx_cec     : in    std_logic;
-        hdmi_rx_hpd     : out   std_logic;
-        hdmi_rx_txen    : out   std_logic;
+--      hdmi_rx_d_p     : in    std_logic_vector(0 to 2);
+--      hdmi_rx_d_n     : in    std_logic_vector(0 to 2);
+--      hdmi_rx_sda     : inout std_logic;
+--      hdmi_rx_cec     : in    std_logic;
+--      hdmi_rx_hpd     : out   std_logic;
+--      hdmi_rx_txen    : out   std_logic;
+--      hdmi_rx_scl     : in    std_logic;
 
         -- HDMI TX
 --      hdmi_tx_clk_p   : out   std_logic;
 --      hdmi_tx_clk_n   : out   std_logic;
---      hdmi_tx_ch_p    : out   std_logic_vector(0 to 2);
---      hdmi_tx_ch_n    : out   std_logic_vector(0 to 2);
-        hdmi_tx_scl     : out   std_logic;
-        hdmi_tx_sda     : inout std_logic;
-        hdmi_tx_cec     : out   std_logic;
-        hdmi_tx_hpd     : in    std_logic;
+--      hdmi_tx_d_p     : out   std_logic_vector(0 to 2);
+--      hdmi_tx_d_n     : out   std_logic_vector(0 to 2);
+--      hdmi_tx_scl     : out   std_logic;
+--      hdmi_tx_sda     : inout std_logic;
+--      hdmi_tx_cec     : out   std_logic;
+--      hdmi_tx_hpd     : in    std_logic;
 
         -- DisplayPort
 --      dp_tx_p         : out   std_logic_vector(0 to 1);
@@ -76,7 +76,7 @@ entity top is
 --      dp_tx_aux_n     : inout std_logic;
 --      dp_tx_aux2_p    : inout std_logic;
 --      dp_tx_aux2_n    : inout std_logic;
-        dp_tx_hpd       : in    std_logic;
+--      dp_tx_hpd       : in    std_logic;
 
         -- audio codec
         ac_mclk         : out   std_logic;
@@ -86,11 +86,11 @@ entity top is
         ac_adc_sdata    : in    std_logic;
 
         -- PMODs
-        ja              : inout std_logic_vector(7 downto 0);
-        jb              : inout std_logic_vector(7 downto 0);
-        jc              : inout std_logic_vector(7 downto 0);
-        xa_p            : inout std_logic_vector(3 downto 0);
-        xa_n            : inout std_logic_vector(3 downto 0);
+--      ja              : inout std_logic_vector(7 downto 0);
+--      jb              : inout std_logic_vector(7 downto 0);
+--      jc              : inout std_logic_vector(7 downto 0);
+--      xa_p            : inout std_logic_vector(3 downto 0);
+--      xa_n            : inout std_logic_vector(3 downto 0);
 
         -- UART
         uart_rx_out     : out   std_logic;
@@ -98,30 +98,30 @@ entity top is
 
         -- ethernet
         eth_rst_n       : out   std_logic;
-        eth_txck        : out   std_logic;
-        eth_txctl       : out   std_logic;
-        eth_txd         : out   std_logic_vector(3 downto 0);
-        eth_rxck        : in    std_logic;
-        eth_rxctl       : in    std_logic;
-        eth_rxd         : in    std_logic_vector(3 downto 0);
-        eth_mdc         : out   std_logic;
-        eth_mdio        : inout std_logic;
-        eth_int_n       : in    std_logic;
-        eth_pme_n       : in    std_logic;
+--      eth_txck        : out   std_logic;
+--      eth_txctl       : out   std_logic;
+--      eth_txd         : out   std_logic_vector(3 downto 0);
+--      eth_rxck        : in    std_logic;
+--      eth_rxctl       : in    std_logic;
+--      eth_rxd         : in    std_logic_vector(3 downto 0);
+--      eth_mdc         : out   std_logic;
+--      eth_mdio        : inout std_logic;
+--      eth_int_n       : in    std_logic;
+--      eth_pme_n       : in    std_logic;
 
         -- fan
-        fan_pwm         : out   std_logic;
+--      fan_pwm         : out   std_logic;
 
         -- FTDI
-        ftdi_clko       : in    std_logic;
-        ftdi_rxf_n      : in    std_logic;
-        ftdi_txe_n      : in    std_logic;
+--      ftdi_clko       : in    std_logic;
+--      ftdi_rxf_n      : in    std_logic;
+--      ftdi_txe_n      : in    std_logic;
         ftdi_rd_n       : out   std_logic;
         ftdi_wr_n       : out   std_logic;
         ftdi_siwu_n     : out   std_logic;
         ftdi_oe_n       : out   std_logic;
-        ftdi_d          : inout std_logic_vector(7 downto 0);
-        ftdi_spien      : out   std_logic;
+--      ftdi_d          : inout std_logic_vector(7 downto 0);
+--      ftdi_spien      : out   std_logic;
 
         -- PS/2
         ps2_clk         : inout std_logic;
@@ -129,155 +129,111 @@ entity top is
 
         -- QSPI
         qspi_cs_n       : out   std_logic;
-        qspi_dq         : inout std_logic_vector(3 downto 0);
+--      qspi_dq         : inout std_logic_vector(3 downto 0);
 
         -- SD
-        sd_reset        : out   std_logic;
-        sd_cclk         : out   std_logic;
-        sd_cmd          : out   std_logic;
-        sd_d            : inout std_logic_vector(3 downto 0);
-        sd_cd           : in    std_logic;
+--      sd_reset        : out   std_logic;
+--      sd_cclk         : out   std_logic;
+--      sd_cmd          : out   std_logic;
+--      sd_d            : inout std_logic_vector(3 downto 0);
+--      sd_cd           : in    std_logic;
 
         -- I2C
         i2c_scl         : inout std_logic;
         i2c_sda         : inout std_logic;
 
         -- VADJ
-        set_vadj        : out   std_logic_vector(1 downto 0);
-        vadj_en         : out   std_logic;
+--      set_vadj        : out   std_logic_vector(1 downto 0);
+--      vadj_en         : out   std_logic;
 
         -- FMC
-        fmc_clk0_m2c_p  : in    std_logic;
-        fmc_clk0_m2c_n  : in    std_logic;
-        fmc_clk1_m2c_p  : in    std_logic;
-        fmc_clk1_m2c_n  : in    std_logic;
-        fmc_la_p        : inout std_logic_vector(33 downto 0);
-        fmc_la_n        : inout std_logic_vector(33 downto 0)
+--      fmc_clk0_m2c_p  : in    std_logic;
+--      fmc_clk0_m2c_n  : in    std_logic;
+--      fmc_clk1_m2c_p  : in    std_logic;
+--      fmc_clk1_m2c_n  : in    std_logic;
+--      fmc_la_p        : inout std_logic_vector(33 downto 0);
+--      fmc_la_n        : inout std_logic_vector(33 downto 0);
+
+        -- DDR3
+        ddr3_reset_n    : out   std_logic
+--      ddr3_ck_p       : out   std_logic_vector(0 downto 0);
+--      ddr3_ck_n       : out   std_logic_vector(0 downto 0);
+--      ddr3_cke        : out   std_logic_vector(0 downto 0);
+--      ddr3_ras_n      : out   std_logic;
+--      ddr3_cas_n      : out   std_logic;
+--      ddr3_we_n       : out   std_logic;
+--      ddr3_odt        : out   std_logic_vector(0 downto 0);
+--      ddr3_addr       : out   std_logic_vector(14 downto 0);
+--      ddr3_ba         : out   std_logic_vector(2 downto 0);
+--      ddr3_dm         : out   std_logic_vector(1 downto 0);
+--      ddr3_dq         : inout std_logic_vector(15 downto 0);
+--      ddr3_dqs_p      : inout std_logic_vector(1 downto 0);
+--      ddr3_dqs_n      : inout std_logic_vector(1 downto 0)
 
     );
 end entity top;
 
 architecture synth of top is
+
+    signal ext_rst      : std_logic;
+    signal ref_clk      : std_logic;
+    signal heartbeat    : std_logic_vector(3 downto 0);
+    signal status       : std_logic_vector(2 downto 0);
+    signal gpo          : std_logic_vector(7 downto 0);
+
 begin
 
-    MAIN: entity xil_defaultlib.demo_audio_io
+    -- user interface:
+    -- button CPU_RESET = reset
+    -- led LD7 = heartbeat (1Hz)
+    -- led LD6 = system clock MMCM lock
+    -- led LD5 = CPU out of reset
+    -- led LD4 = audio clock MMCM lock
+    -- leds LD3..LD0 = CPU gpo3..0
+
+    ext_rst <= not btn_rst_n;
+    ref_clk <= clki_100m;
+    led(7) <= heartbeat(2);
+    led(6) <= status(0);
+    led(5) <= status(1);
+    led(4) <= status(2);
+    led(3 downto 0) <= gpo(3 downto 0);
+
+    MAIN: entity xil_defaultlib.mb_audio_io
         generic map (
             fref        => 100.0
         )
         port map (
-
-            ext_rst     => not btn_rst_n,
-            ref_clk     => clki_100m,
-            sys_rst     => open,
-            sys_clk     => open,
-
-            led         => led,
-
+            ext_rst     => ext_rst,
+            ref_clk     => ref_clk,
+            heartbeat   => heartbeat,
+            status      => status,
+            gpo         => gpo,
             uart_tx     => uart_rx_out,
             uart_rx     => uart_tx_in,
-
             i2c_scl     => i2c_scl,
             i2c_sda     => i2c_sda,
-
             i2s_mclk    => ac_mclk,
             i2s_bclk    => ac_bclk,
             i2s_lrclk   => ac_lrclk,
             i2s_sdo     => ac_dac_sdata,
             i2s_sdi     => ac_adc_sdata
-
         );
 
-    --------------------------------------------------------------------------------
+    -- unused I/Os
 
-    -- OLED
     oled_res_n      <= '0';
     oled_d_c        <= '0';
     oled_sclk       <= '0';
     oled_sdin       <= '0';
-    oled_vbat_dis   <= '1';
-    oled_vdd_dis    <= '1';
-
-    -- HDMI RX
-    hdmi_rx_sda     <= 'Z';
-    hdmi_rx_hpd     <= '0';
-    hdmi_rx_txen    <= '0';
-
-    -- HDMI TX
---  hdmi_tx_clk_p   <= '0';
---  hdmi_tx_clk_n   <= '1';
---  hdmi_tx_p       <= (others => '0');
---  hdmi_tx_n       <= (others => '1');
-    hdmi_tx_scl     <= 'Z';
-    hdmi_tx_sda     <= 'Z';
-    hdmi_tx_cec     <= 'Z';
-
-    -- DisplayPort
---  dp_tx_p         <= (others => 'Z');
---  dp_tx_n         <= (others => 'Z');
---  dp_tx_aux_p     <= 'Z';
---  dp_tx_aux_n     <= 'Z';
---  dp_tx_aux2_p    <= 'Z';
---  dp_tx_aux2_n    <= 'Z';
-
-    -- audio codec
---  ac_mclk         <= '0';
---  ac_bclk         <= 'Z';
---  ac_lrclk        <= 'Z';
---  ac_dac_sdata    <= '0';
-
-    -- PMODs
-    ja              <= (others => 'Z');
-    jb              <= (others => 'Z');
-    jc              <= (others => 'Z');
-    xa_p            <= (others => 'Z');
-    xa_n            <= (others => 'Z');
-
-    -- UART
---  uart_rx_out     <= '1';
-
-    -- ethernet
     eth_rst_n       <= '0';
-    eth_txck        <= '0';
-    eth_txctl       <= '0';
-    eth_txd         <= (others => '0');
-    eth_mdc         <= '0';
-    eth_mdio        <= 'Z';
-
-    -- fan
-    fan_pwm         <= '0';
-
-    -- FTDI
     ftdi_rd_n       <= '1';
     ftdi_wr_n       <= '1';
     ftdi_siwu_n     <= '1';
     ftdi_oe_n       <= '1';
-    ftdi_d          <= (others => 'Z');
-    ftdi_spien      <= 'Z';
-
-    -- PS/2
     ps2_clk         <= 'Z';
     ps2_data        <= 'Z';
-
-    -- QSPI
     qspi_cs_n       <= '1';
-    qspi_dq         <= (others => 'Z');
-
-    -- SD
-    sd_reset        <= 'Z';
-    sd_cclk         <= 'Z';
-    sd_cmd          <= 'Z';
-    sd_d            <= (others => 'Z');
-
-    -- I2C
---  i2c_scl         <= 'Z';
---  i2c_sda         <= 'Z';
-
-    -- VADJ
-    set_vadj        <= (others => 'Z');
-    vadj_en         <= 'Z';
-
-    -- FMC
-    fmc_la_p        <= (others => 'Z');
-    fmc_la_n        <= (others => 'Z');
+    ddr3_reset_n    <= '0';
 
 end architecture synth;
