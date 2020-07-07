@@ -106,8 +106,8 @@ begin
     DECODE: entity work.model_hdmi_decoder
         port map (
             rst         => cap_rst,
-            hdmi_clk    => hdmi_tx_clk_p,
-            hdmi_d      => hdmi_tx_d_p,
+            hdmi_clk    => hdmi_clk_p,
+            hdmi_d      => hdmi_d_p,
             data_pstb   => data_pstb,
             data_hb     => data_hb,
             data_hb_ok  => data_hb_ok,

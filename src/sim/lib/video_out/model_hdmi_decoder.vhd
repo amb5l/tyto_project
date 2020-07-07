@@ -103,7 +103,7 @@ begin
                     hdmi_clk_hp <= 0ps;
                     hdmi_clk_count <= 0;
                 else
-                    if abs(hdmi_clk_hp-(now-hdmi_clk_prev)) > 1ps then -- reject >1ps jitter
+                    if abs(hdmi_clk_hp-(now-hdmi_clk_prev)) > 5ps then -- reject >5ps jitter
                         hdmi_clk_lock <= '0';
                         hdmi_clk_hp <= 0ps;
                         hdmi_clk_count <= 0;                        
@@ -113,7 +113,7 @@ begin
                 if hdmi_clk_hp = 0ps then
                     hdmi_clk_hp <= now-hdmi_clk_prev;
                 else
-                    if abs(hdmi_clk_hp-(now-hdmi_clk_prev)) > 1ps then -- reject >1ps jitter
+                    if abs(hdmi_clk_hp-(now-hdmi_clk_prev)) > 5ps then -- reject >5ps jitter
                         hdmi_clk_lock <= '0';
                         hdmi_clk_hp <= 0ps;
                         hdmi_clk_count <= 0;  
@@ -215,8 +215,7 @@ begin
 
                 when UNKNOWN =>
                     if tmds_type = (tmds_type'range => CTRL) and c(1) = "00" and c(2) = "00" then
-                        period := CONTROL; pcount := 0;
-                        vga_rst <= '0';
+                        period := CONTROL; pcount := 0; vga_rst <= '0';
                     end if;
 
                 when CONTROL =>
