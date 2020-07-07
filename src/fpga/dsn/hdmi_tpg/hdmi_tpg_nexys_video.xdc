@@ -17,7 +17,7 @@
 
 # clock
 
-create_clock -add -name clki_100m -period 10.00 -waveform {0 5} [get_ports clki_100m]
+create_clock -add -name clki_100m -period 10.00 [get_ports clki_100m]
 
 #------------------------------------------------------------------------------
 # physical constraints
