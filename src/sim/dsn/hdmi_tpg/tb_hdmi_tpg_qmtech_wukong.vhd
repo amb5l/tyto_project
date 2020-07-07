@@ -39,23 +39,23 @@ architecture sim of tb_hdmi_tpg_qmtech_wukong is
     signal hdmi_d_p     : std_logic_vector(0 to 2);
     signal hdmi_d_n     : std_logic_vector(0 to 2);
 
-    signal pix_rst      : std_logic;
-    signal pix_clk      : std_logic;
+    signal data_pstb        : std_logic;
+    signal data_hb          : slv_7_0_t(0 to 3);
+    signal data_hb_ok       : std_logic;
+    signal data_sb          : slv_7_0_2d_t(0 to 3,0 to 7);
+    signal data_sb_ok       : std_logic_vector(0 to 3);
 
-    signal data_pstb    : std_logic;
-    signal data_hb      : slv_7_0_t(0 to 3);
-    signal data_hb_ok   : std_logic;
-    signal data_sb      : slv_7_0_2d_t(0 to 3,0 to 7);
-    signal data_sb_ok   : std_logic_vector(0 to 3);
+    signal vga_rst          : std_logic;
+    signal vga_clk          : std_logic;
+    signal vga_vs           : std_logic;
+    signal vga_hs           : std_logic;
+    signal vga_de           : std_logic;
+    signal vga_r            : std_logic_vector(7 downto 0);
+    signal vga_g            : std_logic_vector(7 downto 0);
+    signal vga_b            : std_logic_vector(7 downto 0);
 
-    signal vga_vs       : std_logic;
-    signal vga_hs       : std_logic;
-    signal vga_de       : std_logic;
-    signal vga_r        : std_logic_vector(7 downto 0);
-    signal vga_g        : std_logic_vector(7 downto 0);
-    signal vga_b        : std_logic_vector(7 downto 0);
-
-    signal cap_stb      : std_logic;
+    signal cap_rst          : std_logic;
+    signal cap_stb          : std_logic;
 
 begin
 
@@ -70,12 +70,10 @@ begin
         mode := 0;
         key_n(0) <= '0';
         key_n(1) <= '1';
-        pix_rst <= '1';
+        cap_rst <= '1';
         wait for 20ns;
         key_n(0) <= '1';
-        wait until rising_edge(pix_clk);
-        wait until rising_edge(pix_clk);
-        pix_rst <= '0';
+        cap_rst <= '0';
         loop
             wait until rising_edge(cap_stb);
             mode := mode + 1;
@@ -107,20 +105,22 @@ begin
 
     DECODE: entity work.model_hdmi_decoder
         port map (
-            rst     => pix_rst,
-            ch      => hdmi_d_p,
-            clk     => pix_clk,
-            pstb    => data_pstb,
-            hb      => data_hb,
-            hb_ok   => data_hb_ok,
-            sb      => data_sb,
-            sb_ok   => data_sb_ok,
-            vs      => vga_vs,
-            hs      => vga_hs,
-            de      => vga_de,
-            p(2)    => vga_r,
-            p(1)    => vga_g,
-            p(0)    => vga_b
+            rst         => cap_rst,
+            hdmi_clk    => hdmi_tx_clk_p,
+            hdmi_d      => hdmi_tx_d_p,
+            data_pstb   => data_pstb,
+            data_hb     => data_hb,
+            data_hb_ok  => data_hb_ok,
+            data_sb     => data_sb,
+            data_sb_ok  => data_sb_ok,
+            vga_rst     => vga_rst,
+            vga_clk     => vga_clk,
+            vga_vs      => vga_vs,
+            vga_hs      => vga_hs,
+            vga_de      => vga_de,
+            vga_p(2)    => vga_r,
+            vga_p(1)    => vga_g,
+            vga_p(0)    => vga_b
         );
 
     CAPTURE: entity work.model_vga_sink
@@ -128,15 +128,16 @@ begin
             name        => "tb_hdmi_tpg_qmtech_wukong"
         )
         port map (
-            rst         => '0',
-            clk         => pix_clk,
-            vs          => vga_vs,
-            hs          => vga_hs,
-            de          => vga_de,
-            r           => vga_r,
-            g           => vga_g,
-            b           => vga_b,
-            stb         => cap_stb
+            vga_rst => vga_rst,
+            vga_clk => vga_clk,
+            vga_vs  => vga_vs,
+            vga_hs  => vga_hs,
+            vga_de  => vga_de,
+            vga_r   => vga_r,
+            vga_g   => vga_g,
+            vga_b   => vga_b,
+            cap_rst => cap_rst,
+            cap_stb => cap_stb
         );
 
 end architecture sim;

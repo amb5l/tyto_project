@@ -29,15 +29,16 @@ entity model_vga_sink is
     );
     port
     (
-        rst     : in    std_logic;                      -- pixel clock synchronous reset
-        clk     : in    std_logic;                      -- pixel clock
-        vs      : in    std_logic;                      -- vertical sync
-        hs      : in    std_logic;                      -- horizontal sync
-        de      : in    std_logic;                      -- pixel data enable
-        r       : in    std_logic_vector(7 downto 0);   -- red
-        g       : in    std_logic_vector(7 downto 0);   -- green
-        b       : in    std_logic_vector(7 downto 0);   -- blue
-        stb     : out   std_logic                       -- capture strobe
+        vga_rst     : in    std_logic;                      -- pixel clock synchronous reset
+        vga_clk     : in    std_logic;                      -- pixel clock
+        vga_vs      : in    std_logic;                      -- vertical sync
+        vga_hs      : in    std_logic;                      -- horizontal sync
+        vga_de      : in    std_logic;                      -- pixel data enable
+        vga_r       : in    std_logic_vector(7 downto 0);   -- red
+        vga_g       : in    std_logic_vector(7 downto 0);   -- green
+        vga_b       : in    std_logic_vector(7 downto 0);   -- blue
+        cap_rst     : in    std_logic;                      -- capture reset
+        cap_stb     : out   std_logic                       -- capture strobe
     );
 end entity model_vga_sink;
 
@@ -54,10 +55,16 @@ architecture model of model_vga_sink is
 
 begin
 
-    process(rst,clk,vs,de)
+    process(cap_rst,vga_rst,vga_clk,vga_vs,vga_de)
     begin
 
-        if rst = '1' then
+        if cap_rst = '1' then
+
+            bmp_count <= 0;
+
+        end if;
+        
+        if vga_rst = '1' then
 
             ax          <= 0;
             ay          <= 0;
@@ -68,18 +75,18 @@ begin
 
         else
 
-            if capturing and vs'event then
-                if hs'event then
+            if capturing and vga_vs'event then
+                if vga_hs'event then
                     write_bmp(name,bmp,bmp_count,width,hieght,interlaced);
                     bmp_count <= bmp_count + 1;
                     capturing <= false;
-                    stb <= '1';
+                    cap_stb <= '1';
                 else
                     interlaced <= true;
                 end if;
             end if;
 
-            if rising_edge(de) then
+            if rising_edge(vga_de) then
                 if not capturing then
                     ax <= 0;
                     ay <= 0;
@@ -90,21 +97,21 @@ begin
                 capturing <= true;
             end if;
 
-            if falling_edge(de) then
+            if falling_edge(vga_de) then
                 hieght <= hieght+1;
                 ay <= ay + 1;
                 ax <= 0;
             end if;
 
-            if rising_edge(clk) then
-                stb <= '0';
-                if de = '1' then
+            if rising_edge(vga_clk) then
+                cap_stb <= '0';
+                if vga_de = '1' then
                     if hieght = 0 then
                         width <= width+1;
                     end if;
-                    bmp(ax,ay)(0) <= to_integer(unsigned(r));
-                    bmp(ax,ay)(1) <= to_integer(unsigned(g));
-                    bmp(ax,ay)(2) <= to_integer(unsigned(b));
+                    bmp(ax,ay)(0) <= to_integer(unsigned(vga_r));
+                    bmp(ax,ay)(1) <= to_integer(unsigned(vga_g));
+                    bmp(ax,ay)(2) <= to_integer(unsigned(vga_b));
                     ax <= ax+1;
                 end if;
             end if;
