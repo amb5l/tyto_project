@@ -25,27 +25,33 @@ use xil_defaultlib.types_pkg.all;
 entity model_hdmi_decoder is
     port
     (
-        rst     : in    std_logic;
+        rst         : in    std_logic;
 
-        ch      : in    std_logic_vector(0 to 2);       -- 3x TMDS channels
+        hdmi_clk    : in    std_logic;        
+        hdmi_d      : in    std_logic_vector(0 to 2);       -- 3x TMDS channels
 
-        clk     : out   std_logic;
+        data_pstb   : out   std_logic;                      -- data packet strobe
+        data_hb     : out   slv_7_0_t(0 to 3);              -- data header bytes
+        data_hb_ok  : out   std_logic;                      -- data header bytes ECC OK
+        data_sb     : out   slv_7_0_2d_t(0 to 3,0 to 7);    -- data subpacket bytes (4 subpackets)
+        data_sb_ok  : out   std_logic_vector(0 to 3);       -- data subpacket bytes ECC OK
 
-        pstb    : out   std_logic;                      -- packet strobe
-        hb      : out   slv_7_0_t(0 to 3);              -- header bytes
-        hb_ok   : out   std_logic;                      -- header bytes ECC OK
-        sb      : out   slv_7_0_2d_t(0 to 3,0 to 7);    -- subpacket bytes (4 subpackets)
-        sb_ok   : out   std_logic_vector(0 to 3);       -- subpacket bytes ECC OK
-
-        vs      : out   std_logic;                      -- vertical sync
-        hs      : out   std_logic;                      -- horizontal sync
-        de      : out   std_logic;                      -- pixel data enable
-        p       : out   slv_7_0_t(0 to 2)               -- pixel components
+        vga_rst     : out   std_logic;                      -- VGA reset
+        vga_clk     : out   std_logic;                      -- VGA pixel clock
+        vga_vs      : out   std_logic;                      -- VGA vertical sync
+        vga_hs      : out   std_logic;                      -- VGA horizontal sync
+        vga_de      : out   std_logic;                      -- VGA pixel data enable
+        vga_p       : out   slv_7_0_t(0 to 2)               -- VGA pixel components
 
     );
 end entity model_hdmi_decoder;
 
 architecture model of model_hdmi_decoder is
+
+    signal hdmi_clk_lock    : std_logic := '0';
+    signal hdmi_clk_prev    : time := 0ps;      -- time of last event (since hdmi_clk'last_event always returns 0ps)
+    signal hdmi_clk_hp      : time := 0ps;      -- half clock period
+    signal hdmi_clk_count   : integer := 0;
 
     type period_t is (
             UNKNOWN,
@@ -82,23 +88,63 @@ architecture model of model_hdmi_decoder is
 
 begin
 
-    -------------------------------------------------------------------------------
+    -- clock monitor
+
+    process(rst,hdmi_clk)
+    begin
+        if rst = '1' then
+            hdmi_clk_lock <= '0';
+            hdmi_clk_hp <= 0ps;
+            hdmi_clk_count <= 0;
+        elsif hdmi_clk'event then
+            if hdmi_clk_lock = '1' then
+                if hdmi_clk /= '0' and hdmi_clk /= '1' then
+                    hdmi_clk_lock <= '0';
+                    hdmi_clk_hp <= 0ps;
+                    hdmi_clk_count <= 0;
+                else
+                    if abs(hdmi_clk_hp-(now-hdmi_clk_prev)) > 5ps then -- reject >5ps jitter
+                        hdmi_clk_lock <= '0';
+                        hdmi_clk_hp <= 0ps;
+                        hdmi_clk_count <= 0;                        
+                    end if;
+                end if;
+            else
+                if hdmi_clk_hp = 0ps then
+                    hdmi_clk_hp <= now-hdmi_clk_prev;
+                else
+                    if abs(hdmi_clk_hp-(now-hdmi_clk_prev)) > 5ps then -- reject >5ps jitter
+                        hdmi_clk_lock <= '0';
+                        hdmi_clk_hp <= 0ps;
+                        hdmi_clk_count <= 0;  
+                    else
+                        if hdmi_clk_count = 4 then
+                            hdmi_clk_lock <= '1';
+                        else
+                            hdmi_clk_count <= hdmi_clk_count+1;
+                        end if;
+                    end if;
+                end if;
+            end if;
+        hdmi_clk_prev <= now;
+        end if;
+    end process;
+
     -- CDR, deserialise
 
     GEN_TMDS_CDR_DES: for i in 0 to 2 generate
         TMDS_CDR_DES: entity work.model_tmds_cdr_des
             port map (
-                serial      => ch(i),
+                refclk      => hdmi_clk,
+                serial      => hdmi_d(i),
                 parallel    => tmds_data(i),
                 clk         => tmds_clk(i),
                 locked      => tmds_locked(i)
             );
     end generate GEN_TMDS_CDR_DES;
 
-    -- assumption: channel to channel skew is small (less than half a pixel clock)
-    clk <= tmds_clk(0);
+    vga_clk <= tmds_clk(0); -- assumption: channel to channel skew is small (less than half a pixel clock)
 
-    -------------------------------------------------------------------------------
     -- decode (per channel)
 
     process(tmds_data)
@@ -138,10 +184,9 @@ begin
         end loop;
     end process;
 
-    -------------------------------------------------------------------------------
     -- decode (overall) and extract video timing + data
 
-    process(rst,tmds_locked,clk)
+    process(rst,tmds_locked,vga_clk)
         variable period     : period_t;
         variable pcount     : integer;
         variable hb_byte    : integer range 0 to 3;
@@ -149,27 +194,28 @@ begin
         variable sb_byte    : integer range 0 to 7;
         variable sb_2bit    : integer range 0 to 3;
     begin
-        if rst = '1' or tmds_locked /= "111" then
+        if rst = '1' or hdmi_clk_lock = '0' or tmds_locked /= "111" then
 
-            vs      <= 'X';
-            hs      <= 'X';
-            de      <= '0';
-            p       <= (others => (others => '0'));
-            data    <= (others => (others => (others => '0')));
-            pstb    <= '0';
+            vga_rst     <= '1';
+            vga_vs      <= 'X';
+            vga_hs      <= 'X';
+            vga_de      <= '0';
+            vga_p       <= (others => (others => '0'));
+
+            data        <= (others => (others => (others => '0')));
+            data_pstb   <= '0';
 
             period  := UNKNOWN;
 
-        elsif rising_edge(clk) then
+        elsif rising_edge(vga_clk) then
 
-            -------------------------------------------------------------------------------
             -- period transitions
 
             case period is
 
                 when UNKNOWN =>
-                    if tmds_type = (tmds_type'range => CTRL) and c = (c'range => "00") then
-                        period := CONTROL; pcount := 0;
+                    if tmds_type = (tmds_type'range => CTRL) and c(1) = "00" and c(2) = "00" then
+                        period := CONTROL; pcount := 0; vga_rst <= '0';
                     end if;
 
                 when CONTROL =>
@@ -183,7 +229,7 @@ begin
                             elsif c(1) = "01" and c(2)(1) = '0' then
                                 if pcount < 11 then
                                     report "control period too short" severity warning;
-                                    period := UNKNOWN; pcount := 0;
+                                    period := UNKNOWN; pcount := 0; vga_rst <= '1';
                                 else
                                     if c(2)(0) = '0' then
                                         period := VIDEO_PRE; pcount := 0;
@@ -196,7 +242,7 @@ begin
                     end if;
                     if period = CONTROL and tmds_type(0) = CTRL and c(1) /= "00" and c(2) /= "00" then
                         report "unrecognised control/preamble period" severity warning;
-                        period := UNKNOWN; pcount := 0;
+                        period := UNKNOWN; pcount := 0; vga_rst <= '1';
                     end if;
 
                 when VIDEO_PRE =>
@@ -204,7 +250,7 @@ begin
                     if pcount < 8 then
                         if not (tmds_type(0) = CTRL and c(1) = "01" and c(2) = "00") then
                             report "video preamble ended too soon" severity warning;
-                            period := UNKNOWN; pcount := 0;
+                            period := UNKNOWN; pcount := 0; vga_rst <= '1';
                         end if;
                     else
                         if tmds_data(0) = "1011001100"
@@ -214,7 +260,7 @@ begin
                             period := VIDEO_GB; pcount := 0;
                         else
                             report "expected video guard band" severity warning;
-                            period := UNKNOWN; pcount := 0;
+                            period := UNKNOWN; pcount := 0; vga_rst <= '1';
                         end if;
                     end if;
 
@@ -226,14 +272,14 @@ begin
                         or tmds_data(2) /= "1011001100"
                         then
                             report "expected video guard band" severity warning;
-                            period := UNKNOWN; pcount := 0;
+                            period := UNKNOWN; pcount := 0; vga_rst <= '1';
                         end if;
                     else
                         if tmds_type = (tmds_type'range => VIDEO) then
                             period := VIDEO; pcount := 0;
                         else
                             report "expected video" severity warning;
-                            period := UNKNOWN; pcount := 0;
+                            period := UNKNOWN; pcount := 0; vga_rst <= '1';
                         end if;
                     end if;
 
@@ -250,7 +296,7 @@ begin
                             end if;
                         else
                             report "unrecognised control/preamble period" severity warning;
-                            period := UNKNOWN; pcount := 0;
+                            period := UNKNOWN; pcount := 0; vga_rst <= '1';
                         end if;
                     end if;
 
@@ -259,7 +305,7 @@ begin
                     if pcount < 8 then
                         if not (tmds_type(0) = CTRL and c(1) = "01" and c(2) = "01") then
                             report "data preamble ended too soon" severity warning;
-                            period := UNKNOWN; pcount := 0;
+                            period := UNKNOWN; pcount := 0; vga_rst <= '1';
                         end if;
                     else
                         if tmds_data(1) = "0100110011"
@@ -274,7 +320,7 @@ begin
                             period := DATA_GB_LEADING; pcount := 0;
                         else
                             report "expected data island leading guard band" severity warning;
-                            period := UNKNOWN; pcount := 0;
+                            period := UNKNOWN; pcount := 0; vga_rst <= '1';
                         end if;
                     end if;
 
@@ -291,14 +337,14 @@ begin
                         )
                         then
                             report "expected data island leading guard band" severity warning;
-                            period := UNKNOWN; pcount := 0;
+                            period := UNKNOWN; pcount := 0; vga_rst <= '1';
                         end if;
                     else
                         if tmds_type = (tmds_type'range => TERC4) then
                             period := DATA_ISLAND; pcount := 0;
                         else
                             report "expected data" severity warning;
-                            period := UNKNOWN; pcount := 0;
+                            period := UNKNOWN; pcount := 0; vga_rst <= '1';
                         end if;
                     end if;
 
@@ -306,7 +352,7 @@ begin
                     pcount := pcount + 1;
                     if tmds_type(0) = CTRL or tmds_type(1) = CTRL or tmds_type(2) = CTRL then
                         report "unexpected control period" severity warning;
-                        period := UNKNOWN; pcount := 0;
+                        period := UNKNOWN; pcount := 0; vga_rst <= '1';
                     end if;
                     if (pcount mod 32) = 0 then
                         if tmds_data(1) = "0100110011"
@@ -324,7 +370,7 @@ begin
                     if period = DATA_ISLAND then
                         if tmds_type(0) /= TERC4 or tmds_type(1) /= TERC4 or tmds_type(2) /= TERC4 then
                             report "bad data period" severity warning;
-                            period := UNKNOWN; pcount := 0;
+                            period := UNKNOWN; pcount := 0; vga_rst <= '1';
                         end if;
                     end if;
 
@@ -341,7 +387,7 @@ begin
                         )
                         then
                             report "expected data island trailing guard band" severity warning;
-                            period := UNKNOWN; pcount := 0;
+                            period := UNKNOWN; pcount := 0; vga_rst <= '1';
                         end if;
                     else
                         if tmds_type(0) = CTRL then
@@ -357,71 +403,68 @@ begin
                         end if;
                         if period /= CONTROL and period /= VIDEO_PRE and period /= DATA_PRE then
                             report "expected control or preamble period" severity warning;
-                            period := UNKNOWN; pcount := 0;
+                            period := UNKNOWN; pcount := 0; vga_rst <= '1';
                         end if;
                     end if;
 
             end case;
 
-            -------------------------------------------------------------------------------
             -- extract video timing
 
-            de <= '0';
-            p <= (others => (others => '0'));
+            vga_de <= '0';
+            vga_p <= (others => (others => '0'));
 
             case period is
 
                 when UNKNOWN =>
-                    vs <= 'X';
-                    hs <= 'X';
-                    de <= 'X';
-                    p <= (others => (others => 'X'));
+                    vga_vs <= 'X';
+                    vga_hs <= 'X';
+                    vga_de <= 'X';
+                    vga_p <= (others => (others => 'X'));
 
                 when CONTROL | VIDEO_PRE | DATA_PRE =>
-                    vs <= c(0)(1);
-                    hs <= c(0)(0);
+                    vga_vs <= c(0)(1);
+                    vga_hs <= c(0)(0);
 
                 when VIDEO_GB =>
                     null;
 
                 when VIDEO =>
-                    de <= '1';
-                    p <= d;
+                    vga_de <= '1';
+                    vga_p <= d;
 
                 when DATA_GB_LEADING | DATA_ISLAND | DATA_GB_TRAILING =>
-                    vs <= xd(0)(1);
-                    hs <= xd(0)(0);
+                    vga_vs <= xd(0)(1);
+                    vga_hs <= xd(0)(0);
 
             end case;
 
-            -------------------------------------------------------------------------------
             -- extract data
 
-            pstb <= '0';
+            data_pstb <= '0';
             if period = DATA_ISLAND then
                 for i in 0 to 2 loop
                     data(i,pcount mod 32) <= xd(i);
                 end loop;
                 if pcount mod 32 = 31 then
-                    pstb <= '1';
+                    data_pstb <= '1';
                 end if;
             end if;
 
-            if pstb = '1' then
+            if data_pstb = '1' then
                 for i in 0 to 31 loop
                     hb_byte := i/8;
                     hb_bit := i mod 8;
                     sb_byte := i/4;
                     sb_2bit := i mod 4;
-                    hb(hb_byte)(hb_bit) <= data(0,i)(2);
+                    data_hb(hb_byte)(hb_bit) <= data(0,i)(2);
                     for j in 0 to 3 loop
-                        sb(j,sb_byte)(0+(2*sb_2bit)) <= data(1,i)(j);
-                        sb(j,sb_byte)(1+(2*sb_2bit)) <= data(2,i)(j);
+                        data_sb(j,sb_byte)(0+(2*sb_2bit)) <= data(1,i)(j);
+                        data_sb(j,sb_byte)(1+(2*sb_2bit)) <= data(2,i)(j);
                     end loop;
                 end loop;
             end if;
 
-            -------------------------------------------------------------------------------
             -- to allow variables to be observed on simulation waveform (Vivado)
 
             debug_period  <= period;
@@ -431,16 +474,12 @@ begin
             debug_sb_byte <= sb_byte;
             debug_sb_2bit <= sb_2bit;
 
-            -------------------------------------------------------------------------------
-
-
         end if;
     end process;
 
-    -------------------------------------------------------------------------------
     -- check data ECC
 
-    process(pstb)
+    process(data_pstb)
 
         function xor_v(
             v : std_logic_vector
@@ -476,36 +515,34 @@ begin
 
     begin
 
-        if falling_edge(pstb) then
+        if falling_edge(data_pstb) then
 
             ecc := x"00";
             for i in 0 to 2 loop
-                ecc := hdmi_bch_ecc8(ecc, hb(i));
+                ecc := hdmi_bch_ecc8(ecc, data_hb(i));
             end loop;
             debug_ecc(4) <= ecc;
-            if ecc = hb(3) then
-                hb_ok <= '1';
+            if ecc = data_hb(3) then
+                data_hb_ok <= '1';
             else
-                hb_ok <= '0';
+                data_hb_ok <= '0';
             end if;
 
             for i in 0 to 3 loop
                 ecc := x"00";
                 for j in 0 to 6 loop
-                    ecc := hdmi_bch_ecc8(ecc, sb(i,j));
+                    ecc := hdmi_bch_ecc8(ecc, data_sb(i,j));
                 end loop;
                 debug_ecc(i) <= ecc;
-                if ecc = sb(i,7) then
-                    sb_ok(i) <= '1';
+                if ecc = data_sb(i,7) then
+                    data_sb_ok(i) <= '1';
                 else
-                    sb_ok(i) <= '0';
+                    data_sb_ok(i) <= '0';
                 end if;
             end loop;
 
         end if;
 
     end process;
-
-     -------------------------------------------------------------------------------
 
 end architecture model;

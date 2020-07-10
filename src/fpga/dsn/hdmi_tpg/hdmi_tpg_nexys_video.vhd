@@ -51,8 +51,8 @@ entity top is
         -- HDMI RX
 --      hdmi_rx_clk_p   : in    std_logic;
 --      hdmi_rx_clk_n   : in    std_logic;
---      hdmi_rx_ch_p    : in    std_logic_vector(0 to 2);
---      hdmi_rx_ch_n    : in    std_logic_vector(0 to 2);
+--      hdmi_rx_d_p     : in    std_logic_vector(0 to 2);
+--      hdmi_rx_d_n     : in    std_logic_vector(0 to 2);
 --      hdmi_rx_sda     : inout std_logic;
 --      hdmi_rx_cec     : in    std_logic;
 --      hdmi_rx_hpd     : out   std_logic;
@@ -62,8 +62,8 @@ entity top is
         -- HDMI TX
         hdmi_tx_clk_p   : out   std_logic;
         hdmi_tx_clk_n   : out   std_logic;
-        hdmi_tx_ch_p    : out   std_logic_vector(0 to 2);
-        hdmi_tx_ch_n    : out   std_logic_vector(0 to 2);
+        hdmi_tx_d_p     : out   std_logic_vector(0 to 2);
+        hdmi_tx_d_n     : out   std_logic_vector(0 to 2);
 --      hdmi_tx_scl     : out   std_logic;
 --      hdmi_tx_sda     : inout std_logic;
 --      hdmi_tx_cec     : out   std_logic;
@@ -128,7 +128,7 @@ entity top is
         ps2_data        : inout std_logic;
 
         -- QSPI
-        qspi_cs_n       : out   std_logic
+        qspi_cs_n       : out   std_logic;
 --      qspi_dq         : inout std_logic_vector(3 downto 0);
 
         -- SD
@@ -155,7 +155,7 @@ entity top is
 --      fmc_la_n        : inout std_logic_vector(33 downto 0);
 
         -- DDR3
---      ddr3_reset_n    : out   std_logic;
+        ddr3_reset_n    : out   std_logic
 --      ddr3_ck_p       : out   std_logic_vector(0 downto 0);
 --      ddr3_ck_n       : out   std_logic_vector(0 downto 0);
 --      ddr3_cke        : out   std_logic_vector(0 downto 0);
@@ -189,20 +189,20 @@ begin
     -- button CPU_RESET = reset
     -- button BTNC = press to increment video mode (0..14 then wrap)
     -- switch SW0 = HDMI/DVI mode
-    -- led LD7 = system clock MMCM lock (pulse @ 1Hz)
-    -- led LD6 = pixel clock MMCM lock (pulse @ 1Hz)
-    -- led LD5 = audio clock MMCM lock (pulse @ 1Hz)
-    -- led LD4 = DVI mode
+    -- led LD7 = heartbeat (4Hz = DVI mode, 1Hz = HDMI mode)
+    -- led LD6 = system clock MMCM lock
+    -- led LD5 = pixel clock MMCM lock
+    -- led LD4 = audio clock MMCM lock
     -- leds LD3..LD0 = display mode (binary, 0000..1110)
 
     ext_rst <= not btn_rst_n;
     ref_clk <= clki_100m;
     mode_step <= btn_c;
     dvi <= sw(0);
-    led(7) <= status(0) and heartbeat(2);
-    led(6) <= status(1) and heartbeat(2);
-    led(5) <= status(2) and heartbeat(2);
-    led(4) <= dvi;
+    led(7) <= heartbeat(2) when dvi = '0' else heartbeat(0);
+    led(6) <= status(0);
+    led(5) <= status(1);
+    led(4) <= status(2);
     led(3 downto 0) <= mode;
 
     MAIN: entity xil_defaultlib.hdmi_tpg
@@ -219,8 +219,8 @@ begin
             status      => status,
             hdmi_clk_p  => hdmi_tx_clk_p,
             hdmi_clk_n  => hdmi_tx_clk_n,
-            hdmi_ch_p   => hdmi_tx_ch_p,
-            hdmi_ch_n   => hdmi_tx_ch_n
+            hdmi_d_p    => hdmi_tx_d_p,
+            hdmi_d_n    => hdmi_tx_d_n
         );
 
     -- unused I/Os
@@ -240,5 +240,6 @@ begin
     ps2_clk         <= 'Z';
     ps2_data        <= 'Z';
     qspi_cs_n       <= '1';
+    ddr3_reset_n    <= '0';
 
 end architecture synth;

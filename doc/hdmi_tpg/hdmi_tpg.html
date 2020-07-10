@@ -569,7 +569,7 @@ C:\work\tyto_project&gt; xbuild.bat hdmi_tpg nexys_video 8</pre>
 <dl>
 <dt class="hdlist1">Digilent Nexys Video</dt>
 <dd>
-<p>LD7..5 indicate that the system, pixel and audio clocks are locked (flashing at 1Hz); LD4 indicates DVI mode; LD3..0 indicate the current video mode number as 4-bit binary number.</p>
+<p>LD7 is a heartbeat; it flashes at 1Hz in normal (HDMI) mode, and 4Hz in DVI mode. LD6..4 indicate that the system, pixel and audio clocks are locked. LD3..0 indicate the current video mode number as 4-bit binary number.</p>
 </dd>
 <dt class="hdlist1">QMTECH Wukong</dt>
 <dd>
@@ -592,59 +592,77 @@ C:\work\tyto_project&gt; xbuild.bat hdmi_tpg nexys_video 8</pre>
 <div class="title">Figure 2. Block diagram of the hdmi_tpg design.</div>
 </div>
 <div class="paragraph">
-<p>The modules shown are described below:</p>
+<p>The blocks shown are described below:</p>
 </div>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><code>top</code></dt>
+<dt class="hdlist1">top</dt>
 <dd>
-<p>A board specific wrapper around the main design.</p>
+<p>A board specific wrapper around the main design. Note that the QMTECH Wukong board&#8217;s system clock is 50MHz; this is doubled by an MMCM to get a 100MHz reference frequency which works well as a basis for synthesising the required video and audio clocks.</p>
 </dd>
-<dt class="hdlist1"><code>hdmi_tpg</code></dt>
+<dt class="hdlist1">hdmi tpg</dt>
 <dd>
 <p>The main design.</p>
 </dd>
-<dt class="hdlist1"><code>clock_100m</code></dt>
+<dt class="hdlist1">clock 100m</dt>
 <dd>
 <p>An MMCM configured to generate a 100MHz system clock from a 100MHz reference.</p>
 </dd>
-<dt class="hdlist1"><code>audio_out_test_tone</code></dt>
+<dt class="hdlist1">video out clock</dt>
+<dd>
+<p>An MMCM and associated buffers, and logic to dynamically reconfigure the MMCM. Synthesises the pixel and serialiser clocks required by the current video mode.</p>
+</dd>
+<dt class="hdlist1">audio out test tone</dt>
 <dd>
 <p>This module produces alternating test tones (A4 to the left channel, A3 to the right channel). The <code>audio_clock</code> module instantiated within it comprises an MMCM configured to generate 256 <em>Fs</em> (12.288MHz) from the 100MHz reference clock, and a counter to generate an <em>Fs</em> (48kHz) clock enable.</p>
 </dd>
-<dt class="hdlist1"><code>hdmi_out</code></dt>
+<dt class="hdlist1">video mode step</dt>
 <dd>
-<p>Top level of the HDMI output module.</p>
+<p>This process increments the 4-bit video mode number when a button is pressed.</p>
 </dd>
-<dt class="hdlist1"><code>video_mode</code></dt>
+<dt class="hdlist1">video mode</dt>
 <dd>
-<p>Converts a 4-bit mode number into a full set of video timing parameters (sync, blank, active etc). The source data is containied in the <code>video_mode.xls</code> spreadsheet, which can be edited and converted to VHDL by saving it as CSV and then running the <code>video_mode.py</code> Python script.</p>
+<p>Converts the 4-bit video mode number into a full set of video timing parameters (sync, blank, active etc). The source data is containied in the <code>video_mode.xls</code> spreadsheet, which can be edited and converted to VHDL by saving it as CSV and then running the <code>video_mode.py</code> Python script.</p>
 </dd>
-<dt class="hdlist1"><code>video_out_clock</code></dt>
-<dd>
-<p>An MMCM and associated buffers, and logic to dynamically reconfigure the MMCM to synthesise the pixel and serialiser clocks required by the current video mode.</p>
-</dd>
-<dt class="hdlist1"><code>video_out_timing</code></dt>
+<dt class="hdlist1">video out timing</dt>
 <dd>
 <p>Synthesises basic video timing.</p>
 </dd>
-<dt class="hdlist1"><code>video_out_test_pattern</code></dt>
+<dt class="hdlist1">video out test pattern</dt>
 <dd>
-<p>Generates the test pattern image (an array of vertical and horizontal lines, with colour bars.) Includes a table of reciprocals to smoothly scale the colour ramps in the centre of the image.</p>
+<p>Generates the test pattern image (an array of vertical and horizontal lines, with colour bars.) Includes a table of reciprocals to smoothly scale the colour ramps in the centre of the image for the current output resolution.</p>
 </dd>
-<dt class="hdlist1"><code>hdmi_tx_pcm</code></dt>
+<dt class="hdlist1">ACR strobe</dt>
 <dd>
-<p>Adds synchronisation and channel status per IEC60958 to a PCM sample stream.</p>
+<p>This process generates a 1kHz strobe to ensure Audio Clock Reconstruction packets are transmitted at the intervals required by the HDMI specification.</p>
 </dd>
-<dt class="hdlist1"><code>hdmi_tx_data_injector</code></dt>
+<dt class="hdlist1">vga to hdmi</dt>
 <dd>
-<p>Injects data islands, placed in the video blanking intervals. 2 packets are generated just after the beginning of horizontal sync every line for audio samples and audio clock regeneration (ACR). On the line just above the active area, an additional 2 packets are generated (audio and video InfoFrames). Packets that are not needed (e.g. because there are no audio samples to be transmitted at the time that the packet is being output) are stuffed with zeroes; these null packets are ignored by the sink.</p>
+<p>Top level of the VGA to HDMI conversion IP core.</p>
 </dd>
-<dt class="hdlist1"><code>hdmi_tx_encoder</code></dt>
+<dt class="hdlist1">IEC60958 formatting</dt>
 <dd>
-<p>Uses the HDMI specification&#8217;s recipe for TMDS encoding to create 10-bit TMDS/TERC4 symbols.</p>
+<p>Formats the parallel PCM sample stream into frames with channel status in accordance with IEC60958-3.</p>
 </dd>
-<dt class="hdlist1"><code>tmds_tx_serialiser_selectio</code></dt>
+<dt class="hdlist1">inject</dt>
+<dd>
+<p>The HDMI specification enhances the TMDS encoding of the DVI specification to allow extra data to be carried in video blanking periods. This process delays incoming video to detect and measure these blanking periods, so that the following can be inserted:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>video preambles and guard bands</p>
+</li>
+<li>
+<p>data islands - preamble, leading guard band, packet(s), trailing guard band</p>
+</li>
+</ul>
+</div>
+</dd>
+<dt class="hdlist1">hdmi tx encoder</dt>
+<dd>
+<p>Follows the HDMI specification&#8217;s recipe for TMDS encoding to create 10-bit TMDS/TERC4 symbols.</p>
+</dd>
+<dt class="hdlist1">tmds tx serialiser selectio</dt>
 <dd>
 <p>Converts the 10-bit symbol stream from parallel to serial for each HDMI output channel, and is also used to generate a HDMI (pixel) clock. Drives out via SelectIO (TMDS differential) buffers.</p>
 </dd>
@@ -668,7 +686,7 @@ C:\work\tyto_project&gt; xbuild.bat hdmi_tpg nexys_video 8</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-06-28 18:29:01 +0100
+Last updated 2020-07-05 21:58:55 +0100
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/github.min.css">

@@ -41,15 +41,16 @@ entity video_out_clock is
     );
 end entity video_out_clock;
 
-----------------------------------------------------------------------
-
 architecture structural of video_out_clock is
 
     signal sel_s        : std_logic_vector(1 downto 0);     -- sel, synchronised to sys_clk
 
     signal rsto_req     : std_logic;                        -- rsto request, synchronous e to sys_clk
 
+    signal mmcm_rst      : std_logic;                       -- MMCM reset
     signal locked       : std_logic;                        -- MMCM locked output
+    signal locked_s     : std_logic;                        -- above, synchronised to sys_clk
+
     signal sel_prev     : std_logic_vector(1 downto 0);     -- to detect changes
     signal clk_fb       : std_logic;                        -- feedback clock
     signal clku_fb      : std_logic;                        -- unbuffered feedback clock
@@ -59,15 +60,13 @@ architecture structural of video_out_clock is
     signal cfg_tbl_addr : std_logic_vector(6 downto 0);     -- 4 x 32 entries
     signal cfg_tbl_data : std_logic_vector(39 downto 0);    -- 8 bit address + 16 bit write data + 16 bit read mask
 
-    signal cfg_rst      : std_logic;                        -- MMCM reset
+    signal cfg_rst      : std_logic;                        -- DRP reset
     signal cfg_daddr    : std_logic_vector(6 downto 0);     -- DRP register address
     signal cfg_den      : std_logic;                        -- DRP enable (pulse)
     signal cfg_dwe      : std_logic;                        -- DRP write enable
     signal cfg_di       : std_logic_vector(15 downto 0);    -- DRP write data
     signal cfg_do       : std_logic_vector(15 downto 0);    -- DRP read data
     signal cfg_drdy     : std_logic;                        -- DRP access complete
-
-    signal locked_s     : std_logic;
 
     type cfg_state_t is ( -- state machine states
         IDLE,       -- waiting for fsel change
@@ -82,8 +81,6 @@ architecture structural of video_out_clock is
     signal cfg_state    : cfg_state_t;
 
 begin
-
-    ----------------------------------------------------------------------
 
     process(sys_rst,sys_clk)
 
@@ -301,6 +298,8 @@ begin
             dest_out(0) => rsto
         );
 
+    mmcm_rst <= cfg_rst or rsti;
+
     -- defaults: clk_s = 371.25MHz, clko = 74.25MHz (for clki = 100MHz)
     MMCM: mmcme2_adv
     generic map(
@@ -355,7 +354,7 @@ begin
     )
     port map (
         pwrdwn          => '0',
-        rst             => cfg_rst,
+        rst             => mmcm_rst,
         locked          => locked,
         clkin1          => clki,
         clkin2          => '0',

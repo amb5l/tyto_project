@@ -42,7 +42,7 @@ call vivado -mode tcl -nolog -nojournal -source xproj/xbuild3.tcl -tclargs %~1 %
 exit /B 0
 :error_arguments
 echo "usage:"
-echo "  xbuild.bat design_name board_name"
+echo "  xbuild.bat design_name board_name <jobs>"
 exit /B -1
 :error_xscripts
 echo "cannot find xilinx build scripts"

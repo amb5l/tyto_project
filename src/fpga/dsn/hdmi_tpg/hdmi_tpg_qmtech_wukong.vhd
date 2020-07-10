@@ -98,36 +98,21 @@ architecture synth of top is
     signal ext_rst      : std_logic;
     signal ref_rst      : std_logic;
     signal ref_clk      : std_logic;
+    signal mode_step    : std_logic;
     signal mode         : std_logic_vector(3 downto 0);
-    signal status       : std_logic_vector(2 downto 0);
+    signal dvi          : std_logic;
     signal heartbeat    : std_logic_vector(3 downto 0);
+    signal status       : std_logic_vector(2 downto 0);
 
 begin
 
     -- user interface:
     -- button SW2 = reset
-    -- button SW3 = hold to increment video mode at 1Hz (0..14 then wrap)
+    -- button SW3 = press to increment video mode (0..14 then wrap)
     -- led D5 = heartbeat
     -- led D6 = all MMCMs locked
 
-    MAIN: entity xil_defaultlib.hdmi_tpg
-        generic map (
-            fref        => 100.0 -- 100MHz
-        )
-        port map (
-            ext_rst     => ref_rst,
-            ref_clk     => ref_clk,
-            mode_step   => not key_n(1),
-            mode        => mode,
-            dvi         => '0',
-            heartbeat   => heartbeat,
-            status      => status,
-            hdmi_clk_p  => hdmi_clk_p,
-            hdmi_clk_n  => hdmi_clk_n,
-            hdmi_ch_p   => hdmi_d_p,
-            hdmi_ch_n   => hdmi_d_n
-        );
-
+    ext_rst <= not key_n(0);
     -- note MMCM cascading; better to have 100MHz input clock
     REF_CLOCK: entity xil_defaultlib.clock_100m
         generic map (
@@ -139,14 +124,31 @@ begin
             rsto    => ref_rst,
             clko    => ref_clk
         );
-
-    ext_rst <= not key_n(0);
-
+    mode_step <= not key_n(1);
+    dvi <= '0';
     led_n(0) <=
         heartbeat(2) when status = "111" else   -- full lock = 1Hz
         heartbeat(1) when status /= "000" else  -- partial lock = 2Hz
         heartbeat(0);                           -- no lock = 4Hz
     led_n(1) <= not mode(0);
+
+    MAIN: entity xil_defaultlib.hdmi_tpg
+        generic map (
+            fref        => 100.0 -- 100MHz
+        )
+        port map (
+            ext_rst     => ref_rst,
+            ref_clk     => ref_clk,
+            mode_step   => mode_step,
+            mode        => mode,
+            dvi         => dvi,
+            heartbeat   => heartbeat,
+            status      => status,
+            hdmi_clk_p  => hdmi_clk_p,
+            hdmi_clk_n  => hdmi_clk_n,
+            hdmi_d_p    => hdmi_d_p,
+            hdmi_d_n    => hdmi_d_n
+        );
 
     -- unused I/Os
 
@@ -154,5 +156,6 @@ begin
     hdmi_scl    <= 'Z';
     hdmi_sda    <= 'Z';
     eth_rst_n   <= '0';
+    ddr3_rst_n  <= '0';
 
 end architecture synth;
