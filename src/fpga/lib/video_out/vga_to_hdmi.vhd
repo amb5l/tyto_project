@@ -43,7 +43,6 @@ entity vga_to_hdmi is
 
         vga_rst     : in    std_logic;                     -- reset
         vga_clk     : in    std_logic;                     -- pixel clock
-        vga_clk_x5  : in    std_logic;                     -- serialiser clock = pixel clock x 5
         vga_vs      : in    std_logic;                     -- vertical sync   } active high
         vga_hs      : in    std_logic;                     -- horizontal sync }
         vga_de      : in    std_logic;                     -- data (pixel) enable
@@ -60,10 +59,7 @@ entity vga_to_hdmi is
         pcm_n       : in    std_logic_vector(19 downto 0); -- HDMI ACR N value
         pcm_cts     : in    std_logic_vector(19 downto 0); -- HDMI ACR CTS value
 
-        hdmi_clk_p  : out   std_logic;                     -- HDMI (TMDS) clock output (+ve)
-        hdmi_clk_n  : out   std_logic;                     -- HDMI (TMDS) clock output (-ve)
-        hdmi_d_p    : out   std_logic_vector(0 to 2);      -- HDMI (TMDS) data output channels 0..2 (+ve)
-        hdmi_d_n    : out   std_logic_vector(0 to 2)       -- HDMI (TMDS) data output channels 0..2 (-ve)
+        tmds        : out   slv_9_0_t(0 to 2)              -- parallel TMDS symbol stream x 3 channels 
 
     );
 end entity vga_to_hdmi;
@@ -219,8 +215,6 @@ architecture synth of vga_to_hdmi is
     signal s4_ctl       : std_logic_vector(3 downto 0);     -- CTL bits (pipelined from previous stage)
     signal s4_c         : slv_1_0_t(0 to 2);                -- C input to TMDS encoder x 3 channels
     signal s4_d         : slv_3_0_t(0 to 2);                -- aux data input to TMDS encoder x 3 channels
-
-    signal tmds         : slv_9_0_t(0 to 2);                -- parallel TMDS symbols, 3 channels
 
     ----------------------------------------------------------------------
     -- constant packet content
@@ -892,7 +886,7 @@ begin
     s4_c(1) <= s4_ctl(1 downto 0);
     s4_c(2) <= s4_ctl(3 downto 2);
 
-    GEN_HDMI: for i in 0 to 2 generate
+    GEN_TMDS: for i in 0 to 2 generate
     begin
         ENCODER: entity xil_defaultlib.hdmi_tx_encoder
             generic map (
@@ -908,25 +902,6 @@ begin
                 enc     => s4_enc,
                 q       => tmds(i)
             );
-        SERIALISER: entity xil_defaultlib.serialiser_10to1_selectio
-            port map (
-                rst     => vga_rst,
-                clk     => vga_clk,
-                clk_x5  => vga_clk_x5,
-                d       => tmds(i),
-                out_p   => hdmi_d_p(i),
-                out_n   => hdmi_d_n(i)
-            );
-    end generate GEN_HDMI;
-
-    HDMI_CLK: entity xil_defaultlib.serialiser_10to1_selectio
-        port map (
-            rst     => vga_rst,
-            clk     => vga_clk,
-            clk_x5  => vga_clk_x5,
-            d       => "0000011111",
-            out_p   => hdmi_clk_p,
-            out_n   => hdmi_clk_n
-        );
+    end generate GEN_TMDS;
 
 end architecture synth;

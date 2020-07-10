@@ -20,6 +20,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library xil_defaultlib;
+use xil_defaultlib.types_pkg.all;
 
 entity hdmi_tpg is
     generic (
@@ -101,6 +102,8 @@ architecture synth of hdmi_tpg is
     signal pcm_acr          : std_logic;                        -- HDMI Audio Clock Regeneration packet strobe
     signal pcm_n            : std_logic_vector(19 downto 0);    -- HDMI Audio Clock Regeneration packet N value
     signal pcm_cts          : std_logic_vector(19 downto 0);    -- HDMI Audio Clock Regeneration packet CTS value
+
+    signal tmds             : slv_9_0_t(0 to 2);                -- parallel TMDS channels
 
 begin
 
@@ -193,7 +196,7 @@ begin
             clko => sys_clk
         );
 
-    -- reconfigurable MMCM: 25.2MHz, 27MHz, 74,25MHz or 148.5MHz
+    -- reconfigurable MMCM: 25.2MHz, 27MHz, 74.25MHz or 148.5MHz
     VIDEO_CLOCK: entity xil_defaultlib.video_out_clock
         port map (
             rsti    => mode_rst,
@@ -334,7 +337,6 @@ begin
             hs_pol     => mode_hs_pol,
             vga_rst    => pix_rst,
             vga_clk    => pix_clk,
-            vga_clk_x5 => pix_clk_x5,
             vga_vs     => vga_vs,
             vga_hs     => vga_hs,
             vga_de     => vga_vblank nor vga_hblank,
@@ -349,10 +351,30 @@ begin
             pcm_acr    => pcm_acr,
             pcm_n      => pcm_n,
             pcm_cts    => pcm_cts,
-            hdmi_clk_p => hdmi_clk_p,
-            hdmi_clk_n => hdmi_clk_n,
-            hdmi_d_p   => hdmi_d_p,
-            hdmi_d_n   => hdmi_d_n
+            tmds       => tmds
+        );
+
+    -- serialiser: in this design we use TMDS SelectIO outputs
+    GEN_HDMI_DATA: for i in 0 to 2 generate
+    begin
+        HDMI_DATA: entity xil_defaultlib.serialiser_10to1_selectio
+            port map (
+                rst     => pix_rst,
+                clk     => pix_clk,
+                clk_x5  => pix_clk_x5,
+                d       => tmds(i),
+                out_p   => hdmi_d_p(i),
+                out_n   => hdmi_d_n(i)
+            );
+    end generate GEN_HDMI_DATA;
+    HDMI_CLK: entity xil_defaultlib.serialiser_10to1_selectio
+        port map (
+            rst     => pix_rst,
+            clk     => pix_clk,
+            clk_x5  => pix_clk_x5,
+            d       => "0000011111",
+            out_p   => hdmi_clk_p,
+            out_n   => hdmi_clk_n
         );
 
 end architecture synth;
