@@ -79,7 +79,12 @@ begin
                 if vga_hs'event then
                     write_bmp(name,bmp,bmp_count,width,hieght,interlaced);
                     bmp_count <= bmp_count + 1;
-                    capturing <= false;
+                    ax          <= 0;
+                    ay          <= 0;
+                    width       <= 0;
+                    hieght      <= 0;
+                    capturing   <= false;
+                    interlaced  <= false;
                     cap_stb <= '1';
                 else
                     interlaced <= true;

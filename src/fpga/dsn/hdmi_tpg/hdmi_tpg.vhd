@@ -58,6 +58,7 @@ architecture synth of hdmi_tpg is
     signal mode_step_s      : std_logic_vector(0 to 1);         -- mode step input synchroniser
     signal mode_step_f      : std_logic;                        -- mode step input, filtered (debounced)
     signal mode_step_d      : std_logic;                        -- mode step input, filtered, delayed
+    signal mode_rst         : std_logic;                        -- mode step related reset
 
     signal mode_clk_sel     : std_logic_vector(1 downto 0);     -- pixel frequency select
     signal mode_dmt         : std_logic;                        -- 1 = DMT, 0 = CEA
@@ -152,6 +153,7 @@ begin
             mode_step_d <= '0';
             mode <= x"0";
         elsif rising_edge(sys_clk) then
+            mode_rst <= '0';
             mode_step_s <= mode_step & mode_step_s(0);
             if counter /= 0 then
                 if sys_clken_1khz = '1' then
@@ -169,6 +171,7 @@ begin
             end if;
             mode_step_d <= mode_step_f;
             if mode_step_d = '0' and mode_step_f = '1' then -- leading edge of button press
+                mode_rst <= '1';
                 if mode = x"E" then
                     mode <= x"0";
                 else
@@ -193,7 +196,7 @@ begin
     -- reconfigurable MMCM: 25.2MHz, 27MHz, 74,25MHz or 148.5MHz
     VIDEO_CLOCK: entity xil_defaultlib.video_out_clock
         port map (
-            rsti    => ext_rst,
+            rsti    => mode_rst,
             clki    => ref_clk,
             sys_rst => sys_rst,
             sys_clk => sys_clk,
