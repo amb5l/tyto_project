@@ -250,7 +250,7 @@ architecture synth of vga_to_hdmi is
             2 => x"00",     -- *PART CONSTANT* C(1:0),M(1:0),R(3:0)
             3 => x"88",     -- ITC,EC(2:0),Q(1:0),SC(1:0)
             4 => x"00",     -- *NOT CONSTANT* VIC
-            5 => x"B0",     -- *PART CONSTANT* YQ(1:0),CN(1:0),PR(3:0)
+            5 => x"70",     -- *PART CONSTANT* YQ(1:0),CN(1:0),PR(3:0)
             others => x"00" -- zero
         );
 
@@ -412,6 +412,23 @@ begin
             dest_rst   => vga_rst,
             dest_clk   => vga_clk,
             dest_pulse => vga_acr
+        );
+
+    TEST_ACR : entity xil_defaultlib.xpm_cdc_pulse_x
+        generic map (
+            DEST_SYNC_FF   => 4,
+            INIT_SYNC_FF   => 1,
+            REG_OUTPUT     => 0,
+            RST_USED       => 1,
+            SIM_ASSERT_CHK => 1
+        )
+        port map (
+            src_rst    => pcm_rst,
+            src_clk    => pcm_clk,
+            src_pulse  => pcm_acr,
+            dest_rst   => vga_rst,
+            dest_clk   => vga_clk,
+            dest_pulse => open
         );
 
     SYNC : xpm_cdc_array_single
