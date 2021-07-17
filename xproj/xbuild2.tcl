@@ -18,7 +18,7 @@ app create -name ${vitis_proj_name} -hw ${xsa_file} -os standalone -proc cpu -te
 # importsources does not handle remote sources, so hack linked resources
 # into .project as follows:
 set sources_uri_prefix "PARENT-4-PROJECT_LOC/"
-set mb_files [lmap f $mb_files {join [list ${mb_src_path} $f] ""}]
+set mb_files [lmap f $mb_files {join [list ${src_path_mb} $f] ""}]
 set x [list "	<linkedResources>"]
 foreach f $mb_files {
     set n [file tail $f]
@@ -44,10 +44,10 @@ close $f
 
 #build release and debug ELF files
 app config -name $vitis_proj_name build-config release
-app config -name $vitis_proj_name include-path "../../../../../${mb_src_path}/lib"
+app config -name $vitis_proj_name include-path "../../../../../${src_path_mb}/lib"
 app build -name $vitis_proj_name
 app config -name $vitis_proj_name build-config debug
-app config -name $vitis_proj_name include-path "../../../../../${mb_src_path}/lib"
+app config -name $vitis_proj_name include-path "../../../../../${src_path_mb}/lib"
 app config -name $vitis_proj_name define-compiler-symbols BUILD_CONFIG_DEBUG
 app build -name $vitis_proj_name
 
