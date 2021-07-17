@@ -1,28 +1,33 @@
 # ref clock
-create_clock -add -name clki_100m -period 10 [get_ports clki_100m] ; # 100MHz
+create_clock -add -name clki_50m -period 20.00 [get_ports clki_50m]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets {clki_50m_IBUF}]
 
 # clock renaming
 create_generated_clock -name clk_x2 [get_pins CLOCK/MMCM/CLKOUT0] 
 create_generated_clock -name clk_x1 [get_pins CLOCK/MMCM/CLKOUT1]
 
-# RAM placement for XC7A100 required
+# RAM placement for XC7A100
+set_property LOC RAMB36_X1Y12 [get_cells {SYS/CORE/RAM/GEN_RAM[0].RAM/GEN[0].RAM}]
+set_property LOC RAMB36_X1Y20 [get_cells {SYS/CORE/RAM/GEN_RAM[1].RAM/GEN[0].RAM}]
+set_property LOC RAMB36_X2Y12 [get_cells {SYS/CORE/RAM/GEN_RAM[2].RAM/GEN[0].RAM}]
+set_property LOC RAMB36_X2Y20 [get_cells {SYS/CORE/RAM/GEN_RAM[3].RAM/GEN[0].RAM}]
 
 # physical constraints
 set_property -dict { PACKAGE_PIN M22 IOSTANDARD LVCMOS33 }              [get_ports { clki_50m }];           # net SYS_CLK
 set_property -dict { PACKAGE_PIN J6 IOSTANDARD LVCMOS33 }               [get_ports { led_n[0] }];           # D5, net LED0
 set_property -dict { PACKAGE_PIN H6 IOSTANDARD LVCMOS33 }               [get_ports { led_n[1] }];           # D6, net LED1
-# set_property -dict { PACKAGE_PIN H7 IOSTANDARD LVCMOS33 }               [get_ports { key_n[0] }];           # SW2, net KEY0
-# set_property -dict { PACKAGE_PIN J8 IOSTANDARD LVCMOS33 }               [get_ports { key_n[1] }];           # SW3, net KEY1
+set_property -dict { PACKAGE_PIN H7 IOSTANDARD LVCMOS33 }               [get_ports { key_n[0] }];           # SW2, net KEY0
+set_property -dict { PACKAGE_PIN J8 IOSTANDARD LVCMOS33 }               [get_ports { key_n[1] }];           # SW3, net KEY1
 set_property -dict { PACKAGE_PIN E3 IOSTANDARD LVCMOS33 }               [get_ports { ser_tx }];             # net BANK35_E3
 # set_property -dict { PACKAGE_PIN F3 IOSTANDARD LVCMOS33 }               [get_ports { ser_rx }];             # net BANK35_F3
-set_property -dict { PACKAGE_PIN D4 IOSTANDARD TMDS_33 }                [get_ports { hdmi_clk_p }];         # net BANK35_D4
-set_property -dict { PACKAGE_PIN C4 IOSTANDARD TMDS_33 }                [get_ports { hdmi_clk_n }];         # net BANK35_C4
-set_property -dict { PACKAGE_PIN E1 IOSTANDARD TMDS_33 }                [get_ports { hdmi_d_p[0] }];        # net BANK35_E1
-set_property -dict { PACKAGE_PIN D1 IOSTANDARD TMDS_33 }                [get_ports { hdmi_d_n[0] }];        # net BANK35_D1
-set_property -dict { PACKAGE_PIN F2 IOSTANDARD TMDS_33 }                [get_ports { hdmi_d_p[1] }];        # net BANK35_F2
-set_property -dict { PACKAGE_PIN E2 IOSTANDARD TMDS_33 }                [get_ports { hdmi_d_n[1] }];        # net BANK35_E2
-set_property -dict { PACKAGE_PIN G2 IOSTANDARD TMDS_33 }                [get_ports { hdmi_d_p[2] }];        # net BANK35_G2
-set_property -dict { PACKAGE_PIN G1 IOSTANDARD TMDS_33 }                [get_ports { hdmi_d_n[2] }];        # net BANK35_G1
+# set_property -dict { PACKAGE_PIN D4 IOSTANDARD TMDS_33 }                [get_ports { hdmi_clk_p }];         # net BANK35_D4
+# set_property -dict { PACKAGE_PIN C4 IOSTANDARD TMDS_33 }                [get_ports { hdmi_clk_n }];         # net BANK35_C4
+# set_property -dict { PACKAGE_PIN E1 IOSTANDARD TMDS_33 }                [get_ports { hdmi_d_p[0] }];        # net BANK35_E1
+# set_property -dict { PACKAGE_PIN D1 IOSTANDARD TMDS_33 }                [get_ports { hdmi_d_n[0] }];        # net BANK35_D1
+# set_property -dict { PACKAGE_PIN F2 IOSTANDARD TMDS_33 }                [get_ports { hdmi_d_p[1] }];        # net BANK35_F2
+# set_property -dict { PACKAGE_PIN E2 IOSTANDARD TMDS_33 }                [get_ports { hdmi_d_n[1] }];        # net BANK35_E2
+# set_property -dict { PACKAGE_PIN G2 IOSTANDARD TMDS_33 }                [get_ports { hdmi_d_p[2] }];        # net BANK35_G2
+# set_property -dict { PACKAGE_PIN G1 IOSTANDARD TMDS_33 }                [get_ports { hdmi_d_n[2] }];        # net BANK35_G1
 set_property -dict { PACKAGE_PIN B2 IOSTANDARD LVCMOS33 PULLUP TRUE }   [get_ports { hdmi_scl }];           # net BANK35_B2
 set_property -dict { PACKAGE_PIN A2 IOSTANDARD LVCMOS33 PULLUP TRUE }   [get_ports { hdmi_sda }];           # net BANK35_A2
 # set_property -dict { PACKAGE_PIN B1 IOSTANDARD LVCMOS33 }               [get_ports { hdmi_cec }];           # net BANK35_B1
@@ -102,38 +107,38 @@ set_property -dict { PACKAGE_PIN H17 IOSTANDARD LVCMOS15 }              [get_por
 # set_property -dict { PACKAGE_PIN A20}                                   [get_ports { ddr3_dqs_n[0] }];      # net DDR_DQS0-
 # set_property -dict { PACKAGE_PIN A23}                                   [get_ports { ddr3_dqs_p[1] }];      # net DDR_DQS1+
 # set_property -dict { PACKAGE_PIN A24}                                   [get_ports { ddr3_dqs_n[1] }];      # net DDR_DQS1-
-# set_property -dict { PACKAGE_PIN D5 IOSTANDARD LVCMOS33 }               [get_ports { j10[0] }];             # J10 pin 1, net BANK35_D5
-# set_property -dict { PACKAGE_PIN G5 IOSTANDARD LVCMOS33 }               [get_ports { j10[1] }];             # J10 pin 2, net BANK35_G5
-# set_property -dict { PACKAGE_PIN G7 IOSTANDARD LVCMOS33 }               [get_ports { j10[2] }];             # J10 pin 3, net BANK35_G7
-# set_property -dict { PACKAGE_PIN G8 IOSTANDARD LVCMOS33 }               [get_ports { j10[3] }];             # J10 pin 4, net BANK35_G8
-# set_property -dict { PACKAGE_PIN E5 IOSTANDARD LVCMOS33 }               [get_ports { j10[4] }];             # J10 pin 7, net BANK35_E5
-# set_property -dict { PACKAGE_PIN E6 IOSTANDARD LVCMOS33 }               [get_ports { j10[5] }];             # J10 pin 9, net BANK35_E6
-# set_property -dict { PACKAGE_PIN D6 IOSTANDARD LVCMOS33 }               [get_ports { j10[6] }];             # J10 pin 9, net BANK35_D6
-# set_property -dict { PACKAGE_PIN G6 IOSTANDARD LVCMOS33 }               [get_ports { j10[7] }];             # J10 pin 10, net BANK35_G6
-# set_property -dict { PACKAGE_PIN H4 IOSTANDARD LVCMOS33 }               [get_ports { j11[0] }];             # J11 pin 1, net BANK35_H4
-# set_property -dict { PACKAGE_PIN F4 IOSTANDARD LVCMOS33 }               [get_ports { j11[1] }];             # J11 pin 2, net BANK35_F4
-# set_property -dict { PACKAGE_PIN A4 IOSTANDARD LVCMOS33 }               [get_ports { j11[2] }];             # J11 pin 3, net BANK35_A4
-# set_property -dict { PACKAGE_PIN A5 IOSTANDARD LVCMOS33 }               [get_ports { j11[3] }];             # J11 pin 4, net BANK35_A5
-# set_property -dict { PACKAGE_PIN J4 IOSTANDARD LVCMOS33 }               [get_ports { j11[4] }];             # J11 pin 7, net BANK35_J4
-# set_property -dict { PACKAGE_PIN G4 IOSTANDARD LVCMOS33 }               [get_ports { j11[5] }];             # J11 pin 8, net BANK35_G4
-# set_property -dict { PACKAGE_PIN B4 IOSTANDARD LVCMOS33 }               [get_ports { j11[6] }];             # J11 pin 9, net BANK35_B4
-# set_property -dict { PACKAGE_PIN B5 IOSTANDARD LVCMOS33 }               [get_ports { j11[7] }];             # J11 pin 10, net BANK35_B5
-# set_property -dict { PACKAGE_PIN H21 IOSTANDARD LVCMOS33 }              [get_ports { jp2[0] }];             # JP2 pin 3, net BANK15_H21
-# set_property -dict { PACKAGE_PIN H22 IOSTANDARD LVCMOS33 }              [get_ports { jp2[1] }];             # JP2 pin 4, net BANK15_H22
-# set_property -dict { PACKAGE_PIN K21 IOSTANDARD LVCMOS33 }              [get_ports { jp2[2] }];             # JP2 pin 5, net BANK15_K21
-# set_property -dict { PACKAGE_PIN J21 IOSTANDARD LVCMOS33 }              [get_ports { jp2[3] }];             # JP2 pin 6, net BANK15_J21
-# set_property -dict { PACKAGE_PIN H26 IOSTANDARD LVCMOS33 }              [get_ports { jp2[4] }];             # JP2 pin 7, net BANK15_H26
-# set_property -dict { PACKAGE_PIN G26 IOSTANDARD LVCMOS33 }              [get_ports { jp2[5] }];             # JP2 pin 8, net BANK15_G26
-# set_property -dict { PACKAGE_PIN G25 IOSTANDARD LVCMOS33 }              [get_ports { jp2[6] }];             # JP2 pin 9, net BANK15_G25
-# set_property -dict { PACKAGE_PIN F25 IOSTANDARD LVCMOS33 }              [get_ports { jp2[7] }];             # JP2 pin 10, net BANK15_F25
-# set_property -dict { PACKAGE_PIN G20 IOSTANDARD LVCMOS33 }              [get_ports { jp2[8] }];             # JP2 pin 11, net BANK15_G20
-# set_property -dict { PACKAGE_PIN G21 IOSTANDARD LVCMOS33 }              [get_ports { jp2[9] }];             # JP2 pin 12, net BANK15_G21
-# set_property -dict { PACKAGE_PIN F23 IOSTANDARD LVCMOS33 }              [get_ports { jp2[10] }];            # JP2 pin 13, net BANK15_F23
-# set_property -dict { PACKAGE_PIN E23 IOSTANDARD LVCMOS33 }              [get_ports { jp2[11] }];            # JP2 pin 14, net BANK15_E23
-# set_property -dict { PACKAGE_PIN E26 IOSTANDARD LVCMOS33 }              [get_ports { jp2[12] }];            # JP2 pin 15, net BANK15_E26
-# set_property -dict { PACKAGE_PIN D26 IOSTANDARD LVCMOS33 }              [get_ports { jp2[13] }];            # JP2 pin 16, net BANK15_D26
-# set_property -dict { PACKAGE_PIN E25 IOSTANDARD LVCMOS33 }              [get_ports { jp2[14] }];            # JP2 pin 17, net BANK15_E25
-# set_property -dict { PACKAGE_PIN D25 IOSTANDARD LVCMOS33 }              [get_ports { jp2[15] }];            # JP2 pin 18, net BANK15_D25
+set_property -dict { PACKAGE_PIN D5 IOSTANDARD LVCMOS33 }               [get_ports { j10[0] }];             # J10 pin 1, net BANK35_D5
+set_property -dict { PACKAGE_PIN G5 IOSTANDARD LVCMOS33 }               [get_ports { j10[1] }];             # J10 pin 2, net BANK35_G5
+set_property -dict { PACKAGE_PIN G7 IOSTANDARD LVCMOS33 }               [get_ports { j10[2] }];             # J10 pin 3, net BANK35_G7
+set_property -dict { PACKAGE_PIN G8 IOSTANDARD LVCMOS33 }               [get_ports { j10[3] }];             # J10 pin 4, net BANK35_G8
+set_property -dict { PACKAGE_PIN E5 IOSTANDARD LVCMOS33 }               [get_ports { j10[4] }];             # J10 pin 7, net BANK35_E5
+set_property -dict { PACKAGE_PIN E6 IOSTANDARD LVCMOS33 }               [get_ports { j10[5] }];             # J10 pin 9, net BANK35_E6
+set_property -dict { PACKAGE_PIN D6 IOSTANDARD LVCMOS33 }               [get_ports { j10[6] }];             # J10 pin 9, net BANK35_D6
+set_property -dict { PACKAGE_PIN G6 IOSTANDARD LVCMOS33 }               [get_ports { j10[7] }];             # J10 pin 10, net BANK35_G6
+set_property -dict { PACKAGE_PIN H4 IOSTANDARD LVCMOS33 }               [get_ports { j11[0] }];             # J11 pin 1, net BANK35_H4
+set_property -dict { PACKAGE_PIN F4 IOSTANDARD LVCMOS33 }               [get_ports { j11[1] }];             # J11 pin 2, net BANK35_F4
+set_property -dict { PACKAGE_PIN A4 IOSTANDARD LVCMOS33 }               [get_ports { j11[2] }];             # J11 pin 3, net BANK35_A4
+set_property -dict { PACKAGE_PIN A5 IOSTANDARD LVCMOS33 }               [get_ports { j11[3] }];             # J11 pin 4, net BANK35_A5
+set_property -dict { PACKAGE_PIN J4 IOSTANDARD LVCMOS33 }               [get_ports { j11[4] }];             # J11 pin 7, net BANK35_J4
+set_property -dict { PACKAGE_PIN G4 IOSTANDARD LVCMOS33 }               [get_ports { j11[5] }];             # J11 pin 8, net BANK35_G4
+set_property -dict { PACKAGE_PIN B4 IOSTANDARD LVCMOS33 }               [get_ports { j11[6] }];             # J11 pin 9, net BANK35_B4
+set_property -dict { PACKAGE_PIN B5 IOSTANDARD LVCMOS33 }               [get_ports { j11[7] }];             # J11 pin 10, net BANK35_B5
+set_property -dict { PACKAGE_PIN H21 IOSTANDARD LVCMOS33 }              [get_ports { jp2[0] }];             # JP2 pin 3, net BANK15_H21
+set_property -dict { PACKAGE_PIN H22 IOSTANDARD LVCMOS33 }              [get_ports { jp2[1] }];             # JP2 pin 4, net BANK15_H22
+set_property -dict { PACKAGE_PIN K21 IOSTANDARD LVCMOS33 }              [get_ports { jp2[2] }];             # JP2 pin 5, net BANK15_K21
+set_property -dict { PACKAGE_PIN J21 IOSTANDARD LVCMOS33 }              [get_ports { jp2[3] }];             # JP2 pin 6, net BANK15_J21
+set_property -dict { PACKAGE_PIN H26 IOSTANDARD LVCMOS33 }              [get_ports { jp2[4] }];             # JP2 pin 7, net BANK15_H26
+set_property -dict { PACKAGE_PIN G26 IOSTANDARD LVCMOS33 }              [get_ports { jp2[5] }];             # JP2 pin 8, net BANK15_G26
+set_property -dict { PACKAGE_PIN G25 IOSTANDARD LVCMOS33 }              [get_ports { jp2[6] }];             # JP2 pin 9, net BANK15_G25
+set_property -dict { PACKAGE_PIN F25 IOSTANDARD LVCMOS33 }              [get_ports { jp2[7] }];             # JP2 pin 10, net BANK15_F25
+set_property -dict { PACKAGE_PIN G20 IOSTANDARD LVCMOS33 }              [get_ports { jp2[8] }];             # JP2 pin 11, net BANK15_G20
+set_property -dict { PACKAGE_PIN G21 IOSTANDARD LVCMOS33 }              [get_ports { jp2[9] }];             # JP2 pin 12, net BANK15_G21
+set_property -dict { PACKAGE_PIN F23 IOSTANDARD LVCMOS33 }              [get_ports { jp2[10] }];            # JP2 pin 13, net BANK15_F23
+set_property -dict { PACKAGE_PIN E23 IOSTANDARD LVCMOS33 }              [get_ports { jp2[11] }];            # JP2 pin 14, net BANK15_E23
+set_property -dict { PACKAGE_PIN E26 IOSTANDARD LVCMOS33 }              [get_ports { jp2[12] }];            # JP2 pin 15, net BANK15_E26
+set_property -dict { PACKAGE_PIN D26 IOSTANDARD LVCMOS33 }              [get_ports { jp2[13] }];            # JP2 pin 16, net BANK15_D26
+set_property -dict { PACKAGE_PIN E25 IOSTANDARD LVCMOS33 }              [get_ports { jp2[14] }];            # JP2 pin 17, net BANK15_E25
+set_property -dict { PACKAGE_PIN D25 IOSTANDARD LVCMOS33 }              [get_ports { jp2[15] }];            # JP2 pin 18, net BANK15_D25
 # set_property -dict { PACKAGE_PIN AB26 IOSTANDARD LVCMOS33 }             [get_ports { j12[0] }];             # J12 pin 3, net BANK13_AB26
 # set_property -dict { PACKAGE_PIN AC26 IOSTANDARD LVCMOS33 }             [get_ports { j12[1] }];             # J12 pin 4, net BANK13_AC26
 # set_property -dict { PACKAGE_PIN AB24 IOSTANDARD LVCMOS33 }             [get_ports { j12[2] }];             # J12 pin 5, net BANK13_AB24

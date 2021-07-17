@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
--- hdmi_tpg_nexys_video.vhd                                                   --
+-- np65_poc_nexys_video.vhd                                                   --
 -- Digilent Nexys Video board wrapper for the np65_poc design.                --
 --------------------------------------------------------------------------------
 -- (C) Copyright 2021 Adam Barnes <ambarnes@gmail.com>                        --
@@ -192,7 +192,6 @@ architecture synth of top is
     attribute PULLTYPE: string;
     attribute PULLTYPE of ja : signal is "PULLDOWN";
     attribute PULLTYPE of jb : signal is "PULLDOWN";
-    attribute PULLTYPE of jc : signal is "PULLDOWN";
 
 begin
 

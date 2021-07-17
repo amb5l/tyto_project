@@ -84,6 +84,8 @@ architecture synth of np65_poc_clock is
             return 10.0;
         elsif fref = 100.0 and fsys = 256 then
             return 48.0;
+        elsif fref = 50.0 and fsys = 100 then
+            return 20.0;
         else
             return 0.0; -- error
         end if;
@@ -101,6 +103,8 @@ architecture synth of np65_poc_clock is
             return 1;
         elsif fref = 100.0 and fsys = 256 then
             return 5;
+        elsif fref = 50.0 and fsys = 100 then
+            return 1;
         else
             return 0; -- error
         end if;
@@ -118,6 +122,8 @@ architecture synth of np65_poc_clock is
             return 5.0;
         elsif fref = 100.0 and fsys = 256 then
             return 3.75;
+        elsif fref = 50.0 and fsys = 100 then
+            return 10.0;
         else
             return 0.0; -- error
         end if;

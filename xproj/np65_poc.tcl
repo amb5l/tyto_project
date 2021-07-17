@@ -12,6 +12,8 @@ if {$xbuild_design != "np65_poc_${ram_size}"} {
 }
 if {$xbuild_board == "nexys_video"} {
     set fpga_part "xc7a200tsbg484-1"
+} elseif {$xbuild_board == "qmtech_wukong"} {
+    set fpga_part xc7a100tfgg676-1
 } else {
     error "unsupported board"
 }
