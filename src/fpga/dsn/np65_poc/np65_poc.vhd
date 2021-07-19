@@ -105,6 +105,7 @@ begin
 
             clk_x1          => clk_x1,
             clk_x2          => clk_x2,
+            clk_ph          => open,
 
             rst             => rst,
             hold            => hold,

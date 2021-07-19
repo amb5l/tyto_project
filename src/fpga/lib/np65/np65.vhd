@@ -33,6 +33,7 @@ entity np65 is
 
         clk_x1          : in    std_logic;                          -- CPU clock (typically 40-64MHz)
         clk_x2          : in    std_logic;                          -- system/RAM clock (always 2x CPU clock)
+        clk_ph          : out   std_logic;                          -- clock phase, valid on clk_2x edges: 1 = clk_1x/CPU edge
 
         -- clk_x1 domain
 
@@ -114,6 +115,11 @@ architecture synth of np65 is
 
     constant SEL_REG_Y_NOP      : std_logic_vector(0 downto 0) := "0"; -- NOP should really be OTHER or NOT_MEM
     constant SEL_REG_Y_MEM      : std_logic_vector(0 downto 0) := "1";
+
+    -- clock phase
+
+    signal clk_ph_1         : std_logic;
+    signal clk_ph_2         : std_logic;
 
     -- memory, vectors, caches
 
@@ -316,6 +322,25 @@ architecture synth of np65 is
 
 begin
 
+    -- clock phase
+
+    process(clk_x1)
+    begin
+        if rising_edge(clk_x1) then
+            clk_ph_1 <= not clk_ph_1 and not rst;
+        end if;
+    end process;
+
+    process(clk_x2)
+    begin
+        if rising_edge(clk_x2) then
+            clk_ph_2 <= clk_ph_1 and not rst;
+            clk_ph <= (clk_ph_1 xor clk_ph_2) and not rst;
+        end if;
+    end process;
+
+    -- DMA data I/O
+
     gen_dma_d_v: for i in 0 to 7 generate
         dma_dw_v(i) <= dma_dw((i*8)+7 downto i*8);
         dma_dr((i*8)+7 downto i*8) <= dma_dr_v(i);
@@ -361,6 +386,7 @@ begin
         )
         port map (
             clk_x2      => clk_x2,
+            clk_ph      => clk_ph,
             dma_en      => dma_en,
             dma_a       => dma_a,
             dma_bwe     => dma_bwe,
@@ -380,6 +406,7 @@ begin
         )
         port map (
             clk_x2      => clk_x2,
+            clk_ph      => clk_ph,
             dma_en      => dma_en,
             dma_a       => dma_a,
             dma_bwe     => dma_bwe,
@@ -664,7 +691,7 @@ begin
        else s1_reg_pc;
 
     s1_if_a_rts <= std_logic_vector(unsigned(cache_s_d(1)) & unsigned(cache_s_d(0)) + 1);
-        
+
     with s1_id_iaddr select if_al <=
         s1_if_a_vector              when ID_IADDR_BRK, -- reset, IRQ, BRK, NMI
         s1_if_a_next                when ID_IADDR_NXT, -- next instruction

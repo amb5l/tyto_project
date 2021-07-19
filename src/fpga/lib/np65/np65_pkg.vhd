@@ -35,6 +35,7 @@ package np65_pkg is
 
             clk_x1          : in    std_logic;                              -- CPU clock (typically 40-64MHz)
             clk_x2          : in    std_logic;                              -- system/RAM clock (always 2x CPU clock)
+            clk_ph          : out   std_logic;                              -- clock phase, valid on clk_2x edges: 1 = clk_1x/CPU edge
 
             -- clk_x1 domain
 

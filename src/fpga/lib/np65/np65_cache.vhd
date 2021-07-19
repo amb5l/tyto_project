@@ -35,6 +35,7 @@ package np65_cache_pkg is
             -- coherency (write) port
 
             clk_x2      : in    std_logic;
+            clk_ph      : in    std_logic;
             dma_en      : in    std_logic;
             dma_a       : in    std_logic_vector(apmsb downto 3);
             dma_bwe     : in    std_logic_vector(7 downto 0);
@@ -75,6 +76,7 @@ entity np65_cache is
     port (
 
         clk_x2      : in    std_logic;
+        clk_ph      : in    std_logic;
         dma_en      : in    std_logic;
         dma_a       : in    std_logic_vector(apmsb downto 3);
         dma_bwe     : in    std_logic_vector(7 downto 0);
@@ -117,7 +119,7 @@ begin
 
                 cs_n(n_byte+(4*n_dword)) <= '0' when
                     (dma_en = '1' and dma_a(apmsb downto 8) = dma_base) or
-                    (dma_en = '0' and cpu_a(15 downto 8) = base)
+                    (clk_ph = '1' and dma_en = '0' and cpu_a(15 downto 8) = base)
                     else '1';
 
                 wa(n_byte+(4*n_dword)) <= dma_a(7 downto 3) when dma_en = '1' else
