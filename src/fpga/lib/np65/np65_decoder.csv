@@ -24,7 +24,7 @@ flag_i,2,NOP,CLR,SET,BRK,,,,,,,,,,,,,,,,,,,,,,,,,,
 flag_d,2,NOP,CLR,SET,BRK,,,,,,,,,,,,,,,,,,,,,,,,,,
 flag_v,2,NOP,CLR,ADD,BIT,,,,,,,,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-BIT FIELD/SIZE =>,,valid,fast,isize,iaddr,branch,bfsel,bfval,sdelta,dop,daddr,iix,dsize,wdata,sreg,cmp,incdec,addsub,logic,shift,rmw,reg_s,reg_p,reg_a,reg_x,reg_y,flag_c,flag_zn,flag_i,flag_d,flag_v
+BIT FIELD/SIZE =>,,valid,fast,isize,iaddr,branch,bfsel,bfval,sdelta,dop,daddr,zpx,dsize,wdata,sreg,cmp,incdec,addsub,logic,shift,rmw,reg_s,reg_p,reg_a,reg_x,reg_y,flag_c,flag_zn,flag_i,flag_d,flag_v
 NMEMONIC,OPCODE,1,1,2,3,1,2,1,3,2,4,1,2,3,2,1,1,1,2,2,1,1,1,3,3,3,3,3,2,2,2
 ADC_abs,109,x,x,3,.,.,.,.,.,R,ABS,.,1,.,A,.,.,ADD,.,.,.,.,.,ADD,.,.,ADD,ADD,.,.,ADD
 ADC_abs_X,125,x,x,3,.,.,.,.,.,R,ABS_X,.,1,.,A,.,.,ADD,.,.,.,.,.,ADD,.,.,ADD,ADD,.,.,ADD

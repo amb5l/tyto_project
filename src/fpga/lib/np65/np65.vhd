@@ -165,7 +165,7 @@ architecture synth of np65 is
     signal s1_id_sdelta     : std_logic_vector(ID_SDELTA_0'range);
     signal s1_id_dop        : std_logic_vector(ID_DOP_NOP'range);
     signal s1_id_daddr      : std_logic_vector(ID_DADDR_IMM'range);
-    signal s1_id_iix        : std_logic;
+    signal s1_id_zpx        : std_logic;
     signal s1_id_dsize      : std_logic_vector(ID_DSIZE_1'range);
     signal s1_id_wdata      : std_logic_vector(ID_WDATA_A'range);
     signal s1_id_sreg       : std_logic_vector(ID_SREG_A'range);
@@ -407,7 +407,7 @@ begin
             sdelta  => s1_id_sdelta,
             dop     => s1_id_dop,
             daddr   => s1_id_daddr,
-            iix     => s1_id_iix,
+            iix     => s1_id_zpx,
             dsize   => s1_id_dsize,
             wdata   => s1_id_wdata,
             sreg    => s1_id_sreg,
@@ -618,10 +618,10 @@ begin
                     end if;
 
                     case s1_id_shift is
-                        when ID_SHIFT_ASL => s2_shift_m_c <= mr(7);
-                        when ID_SHIFT_LSR => s2_shift_m_c <= mr(0);
-                        when ID_SHIFT_ROL => s2_shift_m_c <= mr(7);
-                        when ID_SHIFT_ROR => s2_shift_m_c <= mr(0);
+                        when ID_SHIFT_ASL => s2_shift_m_c <= s1_rmw_r(7);
+                        when ID_SHIFT_LSR => s2_shift_m_c <= s1_rmw_r(0);
+                        when ID_SHIFT_ROL => s2_shift_m_c <= s1_rmw_r(7);
+                        when ID_SHIFT_ROR => s2_shift_m_c <= s1_rmw_r(0);
                         when others => null;
                     end case;
 
@@ -677,7 +677,7 @@ begin
 
     -- load/store address generation
 
-    cache_z_a <= std_logic_vector(unsigned(s1_operand_8) + unsigned(s2_reg_x)) when s1_id_iix = '1' else s1_operand_8;
+    cache_z_a <= std_logic_vector(unsigned(s1_operand_8) + unsigned(s2_reg_x)) when s1_id_zpx = '1' else s1_operand_8;
 
     with s1_id_daddr select ls_al <=
         x"01" & s2_reg_s_add1                                                 when ID_DADDR_PULL,  -- stack pull (not needed because of stack cache)
