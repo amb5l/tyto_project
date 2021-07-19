@@ -249,8 +249,9 @@ architecture synth of np65 is
     signal s2_shift_a_c     : std_logic;
     signal s2_shift_m_c     : std_logic;
 
-    signal s1b_rmw          : std_logic_vector(7 downto 0);
-    signal s1b_rmw_z        : std_logic;
+    signal s1_rmw_r         : std_logic_vector(7 downto 0);
+    signal s1_rmw_w         : std_logic_vector(7 downto 0);
+    signal s1_rmw_z         : std_logic;
     signal s2_rmw_z         : std_logic;
     signal s2_rmw_n         : std_logic;
 
@@ -507,9 +508,9 @@ begin
 
                     s2_id_addsub    <= s1_id_addsub;
                     s2_id_shift     <= s1_id_shift;
-                    s2_operand_8 <= s1_operand_8;
-                    s2_rmw_z     <= s1b_rmw_z;
-                    s2_rmw_n       <= s1b_rmw(7);
+                    s2_operand_8    <= s1_operand_8;
+                    s2_rmw_z        <= s1_rmw_z;
+                    s2_rmw_n        <= s1_rmw_w(7);
                     if s1_id_daddr = ID_DADDR_IMM then
                         s2_imm <= '1';
                     else
@@ -736,7 +737,7 @@ begin
         '0';
 
     with s1_id_wdata select s1_ls_dw(0) <=
-        s1b_rmw                                              when ID_WDATA_RMW, -- RMW
+        s1_rmw_w                                             when ID_WDATA_RMW, -- RMW
         s2_reg_a                                             when ID_WDATA_A,   -- STA, PHA
         s2_reg_x                                             when ID_WDATA_X,   -- STX
         s2_reg_y                                             when ID_WDATA_Y,   -- STY
@@ -833,16 +834,18 @@ begin
 
     -- read/modify/write (RMW) modified data
 
-    s1b_rmw <=
-        mr(6 downto 0) & '0'               when s1_id_rmw = ID_RMW_SHF and s1_id_shift = ID_SHIFT_ASL  else
-        '0' & mr(7 downto 1)               when s1_id_rmw = ID_RMW_SHF and s1_id_shift = ID_SHIFT_LSR  else
-        mr(6 downto 0) & s2_flag_c         when s1_id_rmw = ID_RMW_SHF and s1_id_shift = ID_SHIFT_ROL  else
-        s2_flag_c & mr(7 downto 1)         when s1_id_rmw = ID_RMW_SHF and s1_id_shift = ID_SHIFT_ROR  else
-        std_logic_vector(unsigned(mr) + 1) when s1_id_rmw = ID_RMW_ID and s1_id_incdec = ID_INCDEC_INC else
-        std_logic_vector(unsigned(mr) - 1) when s1_id_rmw = ID_RMW_ID and s1_id_incdec = ID_INCDEC_DEC else
+    s1_rmw_r <= cache_z_d(0) when s1_id_fast ='1' else mr;
+
+    s1_rmw_w <=
+        s1_rmw_r(6 downto 0) & '0'               when s1_id_rmw = ID_RMW_SHF and s1_id_shift = ID_SHIFT_ASL  else
+        '0' & s1_rmw_r(7 downto 1)               when s1_id_rmw = ID_RMW_SHF and s1_id_shift = ID_SHIFT_LSR  else
+        s1_rmw_r(6 downto 0) & s2_flag_c         when s1_id_rmw = ID_RMW_SHF and s1_id_shift = ID_SHIFT_ROL  else
+        s2_flag_c & s1_rmw_r(7 downto 1)         when s1_id_rmw = ID_RMW_SHF and s1_id_shift = ID_SHIFT_ROR  else
+        std_logic_vector(unsigned(s1_rmw_r) + 1) when s1_id_rmw = ID_RMW_ID and s1_id_incdec = ID_INCDEC_INC else
+        std_logic_vector(unsigned(s1_rmw_r) - 1) when s1_id_rmw = ID_RMW_ID and s1_id_incdec = ID_INCDEC_DEC else
         x"00";
 
-    s1b_rmw_z <= '1' when s1b_rmw = x"00" else '0';
+    s1_rmw_z <= '1' when s1_rmw_w = x"00" else '0';
 
     -- register PC (program counter)
 
