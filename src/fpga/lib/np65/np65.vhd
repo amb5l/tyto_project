@@ -407,7 +407,7 @@ begin
             sdelta  => s1_id_sdelta,
             dop     => s1_id_dop,
             daddr   => s1_id_daddr,
-            iix     => s1_id_zpx,
+            zpx     => s1_id_zpx,
             dsize   => s1_id_dsize,
             wdata   => s1_id_wdata,
             sreg    => s1_id_sreg,
