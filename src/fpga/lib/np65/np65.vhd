@@ -146,12 +146,9 @@ architecture synth of np65 is
     signal vector_dw        : std_logic_vector(7 downto 0);                 -- delayed write data
     signal vector_we        : std_logic;                                    -- delayed write enable
 
-    signal s1_zptr_a        : std_logic_vector(7 downto 0);                 -- address of zero page pointer
+    signal cache_z_a        : std_logic_vector(7 downto 0);                 -- zero page cache read address
     signal cache_z_d        : slv_7_0_t(3 downto 0);                        -- raw zero page cache read data
-    signal s1_zptr_d        : std_logic_vector(15 downto 0);                -- zero page pointer value
-
     signal cache_s_d        : slv_7_0_t(3 downto 0);                        -- raw stack cache read data
-    signal s1_pull_d        : slv_7_0_t(2 downto 0);                        -- fast pull data
 
     signal dma_dw_v         : slv_7_0_t(7 downto 0);
     signal dma_dr_v         : slv_7_0_t(7 downto 0);
@@ -313,8 +310,8 @@ architecture synth of np65 is
     attribute keep_hierarchy of DECODER : label is "yes";
 
     attribute keep : string;
-    attribute keep of s1_zptr_d : signal is "true";
-    attribute keep of s1_pull_d : signal is "true";
+    attribute keep of cache_z_d : signal is "true";
+    attribute keep of cache_s_d : signal is "true";
 
 begin
 
@@ -370,11 +367,9 @@ begin
             cpu_a       => s1_ls_al,
             cpu_bwe     => s1_ls_bwe,
             cpu_dw      => s1_ls_dw,
-            cache_a     => s1_zptr_a,
+            cache_a     => cache_z_a,
             cache_dr    => cache_z_d
         );
-
-        s1_zptr_d <= cache_z_d(1) &  cache_z_d(0);
 
     -- stack cache
 
@@ -394,8 +389,6 @@ begin
             cache_a     => s2_reg_s_add1,
             cache_dr    => cache_s_d
         );
-
-    s1_pull_d <= cache_s_d(2 downto 0);
 
     -- instruction decoder
 
@@ -445,7 +438,7 @@ begin
 
     s1_flag_i_clr <= '1' when -- I flag will be cleared by next instruction (CLI, RTI or PLP)
         (s1_id_flag_i = ID_FLAG_I_CLR) or
-        (s1_id_reg_p = '1' and s1_pull_d(0)(2) = '0')
+        (s1_id_reg_p = '1' and cache_s_d(0)(2) = '0')
         else '0';
 
     s1_brk <= '1' when s1_id_flag_i = ID_FLAG_I_BRK else '0';
@@ -599,7 +592,7 @@ begin
                     -- PLP/RTI
 
                     if s1_id_reg_p = '1' then
-                        s2_reg_p_next <= s1_pull_d(0);
+                        s2_reg_p_next <= cache_s_d(0);
                         s2_flag_b_next <= '1';
                         if s2_flag_x = '1' then
                             s2_flag_x_next <= '1'; -- setting X flag cannot be undone
@@ -669,7 +662,7 @@ begin
        std_logic_vector(unsigned(s1_reg_pc) + unsigned(s1_id_isize) + 1) when s1_col = '0'
        else s1_reg_pc;
 
-    s1_if_a_rts <= std_logic_vector(unsigned(s1_pull_d(1)) & unsigned(s1_pull_d(0)) + 1);
+    s1_if_a_rts <= std_logic_vector(unsigned(cache_s_d(1)) & unsigned(cache_s_d(0)) + 1);
         
     with s1_id_iaddr select if_al <=
         s1_if_a_vector              when ID_IADDR_BRK, -- reset, IRQ, BRK, NMI
@@ -677,13 +670,13 @@ begin
         s1_if_a_bxx                 when ID_IADDR_BRX, -- branch
         s1_operand_16               when ID_IADDR_JMP, -- JMP/JSR absolute
         s1_if_a_rts                 when ID_IADDR_RTS, -- RTS
-        s1_pull_d(2) & s1_pull_d(1) when ID_IADDR_RTI, -- RTI
+        cache_s_d(2) & cache_s_d(1) when ID_IADDR_RTI, -- RTI
         ls_dr(1) & ls_dr(0)         when ID_IADDR_IND, -- JMP indirect
         x"0000"                     when others;
 
     -- load/store address generation
 
-    s1_zptr_a <= std_logic_vector(unsigned(s1_operand_8) + unsigned(s2_reg_x)) when s1_id_iix = '1' else s1_operand_8;
+    cache_z_a <= std_logic_vector(unsigned(s1_operand_8) + unsigned(s2_reg_x)) when s1_id_iix = '1' else s1_operand_8;
 
     with s1_id_daddr select ls_al <=
         x"01" & s2_reg_s_add1                                                 when ID_DADDR_PULL,  -- stack pull (not needed because of stack cache)
@@ -696,8 +689,9 @@ begin
         s1_operand_16                                                         when ID_DADDR_ABS,   -- absolute
         std_logic_vector(unsigned(s1_operand_16) + unsigned(s2_reg_x))        when ID_DADDR_ABS_X, -- absolute,X
         std_logic_vector(unsigned(s1_operand_16) + unsigned(s2_reg_y))        when ID_DADDR_ABS_Y, -- absolute,Y
-        s1_zptr_d                                                             when ID_DADDR_IIX,   -- (ZP,X)
-        std_logic_vector(unsigned(s1_zptr_d) + unsigned(s2_reg_y))            when ID_DADDR_IIY,   -- (ZP),Y
+        cache_z_d(1) & cache_z_d(0)                                           when ID_DADDR_IIX,   -- (ZP,X)
+        std_logic_vector((unsigned(cache_z_d(1)) & unsigned(cache_z_d(0)))
+            + unsigned(s2_reg_y))                                             when ID_DADDR_IIY,   -- (ZP),Y
         x"0000"                                                               when others;
 
     -- load/store strobes and byte write enables
