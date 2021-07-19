@@ -22,10 +22,10 @@ use ieee.numeric_std.all;
 library std;
 use std.env.all;
 
-entity tb_np65_poc_nexys_video is
-end entity tb_np65_poc_nexys_video;
+entity tb_np65_poc_qmtech_wukong is
+end entity tb_np65_poc_qmtech_wukong;
 
-architecture sim of tb_np65_poc_nexys_video is
+architecture sim of tb_np65_poc_qmtech_wukong is
 
     signal clki_50m     : std_logic;
     signal key_n        : std_logic_vector(1 downto 0);
@@ -52,11 +52,10 @@ begin
             clki_50m    => clki_50m,
             led_n       => led_n,
             key_n       => key_n,
+            j10         => (others => '0'),
+            j11         => (others => '0'),
+            jp2         => open, 
             ser_tx      => open,
-            hdmi_clk_p  => hdmi_clk_p,
-            hdmi_clk_n  => hdmi_clk_n,
-            hdmi_d_p    => hdmi_d_p,
-            hdmi_d_n    => hdmi_d_n,
             hdmi_scl    => open,
             hdmi_sda    => open,
             eth_rst_n   => open,
