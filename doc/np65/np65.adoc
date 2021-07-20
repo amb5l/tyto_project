@@ -2,68 +2,117 @@
 
 A fast 6502 compatible CPU core with tightly coupled RAM.
 
-== Performance
+'''
+== Throughput
 
-The np65 achieves close to 1 instruction per clock (IPC). This compares with an IPC of ~3 for the classic NMOS 6502. np65 designs have been implemented with CPU clock speeds of 50MHz on Xilinx 7 series devices (-1 speed grade). An np65 clocked at 50MHz therefore delivers ~150x the performance of a classic NMOS 6502 clocked at 1MHz.
+The np65 achieves one instruction per cycle for almost all opcodes (138 out of 151). Exceptions are as follows; these execute in 2 cycles:
+
+- read-modify-writes accessing 16 bit addresses (INC, DEC, ASL, LSR, ROL, ROR - 12 opcodes in total);
+- JMP relative;
+- modified instructions fetched immediately after modification.
+
+This compares with an average IPC of less than 1/3 for the classic NMOS 6502 (measured on Klaus Dormann's 6502 functional test).
+
+np65 designs have been implemented with CPU clock speeds of 50MHz on Xilinx 7 series devices (-1 speed grade). An np65 clocked at 50MHz should therefore deliver around ~150x the performance of a classic NMOS 6502 clocked at 1MHz. In certain cases, the performance benefit can be much higher: for a read-modify-write using the zero page indexed addressing mode, the cycle count is down from 6 to 1; for conditional branches the cycle count is down from 5 to 1; for an interrupt, the total overhead is down from 11 cycles to 2.
+
+Like the 6502, np65 instruction execution times are deterministic.
 
 == Compatibility
 
-np65 includes a decoder (microcode) ROM that is built from a data table contained in a CSV file that can be authored in Excel (an XLS file is provided). A Python script is included to generate VHDL from the CSV file.
+np65 includes a decoder (microcode) ROM that is built from a data table contained in a CSV file. An XLS file is provided to facilitate the creation and editing of the CSV. A Python script is included to generate VHDL from the CSV file.
 
 The decoder currently supports all documented instructions of the NMOS 6502. Support for undocumented instructions, as well as other 6502 variants, is planned.
 
+Note that the data caches (described below) require software initialisation. The np65 therefore executes a small amount of "pre-reset" code. This is typically located in the same part of the memory map as hardware registers to avoid consuming any more important platform memory.
 
-== RAM
 
-RAM sizes of 64kbytes, 128kbytes or 256kbytes are supported. The mechanism for translating logical 16 bit CPU addresses into physical RAM addresses to access more than 64k is user defined. The np65_poc proof of concept design implements 16k bank switching similar to https://en.wikipedia.org/wiki/BBC_Micro[Acorn's BBC micro].
+== Memory
 
-RAM is physically partitioned into 4 banks, with banks interleaved on byte boundaries. The address for each bank is calculated separately so that unaligned accesses of up to 4 bytes incur no penalty. The opcode and all operands of an instruction are fetched in single cycle. Data accesses of more than a single byte are much less common (e.g. RTI = read 3 bytes from stack) but the same flexibility is implemented. This may be useful if the instruction set is extended with 16- or 32-bit data operations.
+The np65 core includes RAM which is tightly coupled to the CPU to maximise performance. RAM sizes of 64kbytes, 128kbytes or 256kbytes are supported
 
-RAM is clocked at 2x the CPU clock so that DMA accesses may be interleaved with CPU accesses with no penalty. It is also possible to suspend CPU access for increased DMA bandwidth.
+The mechanism for translating logical 16 bit CPU addresses into physical RAM addresses to access more than 64k is user defined. The np65_poc proof of concept design, for example, implements 16k bank switching similar to https://en.wikipedia.org/wiki/BBC_Micro[Acorn's BBC micro]. User logic may also implement write protected (ROM), external memory/registers and empty regions of the memory map as required.
 
-RAM is dual ported. During CPU accesses, the ports are used to implement concurrent instruction fetches and data loads/stores. During DMA accesses, the ports are bonded and are used to access 8 bytes per cycle.
+RAM is physically partitioned into 4 byte banks, interleaved on byte boundaries. The address for each bank is calculated separately so that up to 4 consecutive bytes may be read or written in a single cycle, regardless of alignment. This used to fetch the opcode and all operands of an instruction together. Data accesses of more than a single byte are much less common (e.g. RTI = read 3 bytes from stack) but the same flexibility is implemented. This may be useful if the instruction set is extended with 16- or 32-bit data operations.
 
-The RAM may be initialised with firmware/software. A Python script is included to generate a VHDL package with initialisation constants from one or more binary files.
+RAM is clocked at 2x the CPU clock so that DMA accesses may be interleaved with CPU accesses on alternate cycles with no penalty. CPU access may be suspended to double DMA bandwidth.
 
-== Caches
+RAM is dual ported. During CPU accesses, the ports are used to implement concurrent instruction fetches and data loads/stores. During DMA accesses, the ports are bonded and are used to access 8 bytes per cycle (800MByte/s at 100MHz).
 
-Small caches are provided for zero page and the stack. The zero page cache removes the overhead of a pointer fetch for indexed indirect and indirect indexed address modes. The stack cache accelerates RTS and RTI instructions and may facilitate future instruction set enhancements. Cache coherency is maintained during DMA.
+The RAM may be initialised with firmware/software e.g. ROM contents. A Python script is included to generate a VHDL package with initialisation constants from one or more binary files.
+
+== Data Caches
+
+Small (256 byte) data caches are provided for zero page and the stack. The zero page cache removes the overhead of data reads for read-modify-writes, and of pointer fetches for indexed indirect and indirect indexed address modes. The stack cache removes the overhead of stack pulls for RTS and RTI instructions.
+
+These caches are kept coherent with main RAM for both CPU and DMA writes.
+
+Simple registers are used to cache the contents of the IRQ and NMI vectors, removing the overhead of vector fetch to accelerate interrupt handling.
 
 == Pipeline
 
-np65 is pipelined just enough to sustain one instruction per cycle for almost all instructions, without incurring any penalties for jumps or conditional branches. The exceptions are RMW instructions (INC, DEC) and JMP relative - these require a single additional cycle. The pipeline stages are described below:
+The np65 has a 3 stage pipeline for most instructions:
 
-=== Stage 0 : fetch
-- instruction fetch address presented to RAM
+* Stage 0 : fetch
+** instruction fetch address presented to RAM
+* Stage 1 : decode and execute
+** instruction fetch data (opcode and operands) returned from RAM
+** instruction (opcode) decode
+** data or pointer read from zero page cache (if applicable)
+** pull data read from stack cache (RTS and RTI)
+** load/store address presented to RAM (if applicable)
+** store data presented to RAM (if applicable)
+* Stage 2 : complete
+** registers, status flags and memory contents updated
 
-=== Stage 1 : decode and execute
-- instruction fetch data (opcode and operands) returned from RAM
-- instruction (opcode) decode
-- pointer read from zero page cache (indirect indexed and indexed indirect address modes)
-- pull data read from stack cache (RTS and RTI)
-- load/store address presented to RAM (if applicable)
-- store data presented to RAM (if applicable)
+The pipeline stages for read-modify-write instructions accessing 16 bit addresses are as follows:
 
-=== Stage 1x (RMW instructions only): modify
-- load (read) data returned from RAM
-- store (modified write) data presented to RAM
-- execution pauses during this stage
+* Stage 0 : fetch
+** instruction fetch address presented to RAM
+* Stage 1 : decode and execute
+** instruction fetch data (opcode and operands) returned from RAM
+** instruction (opcode) decode
+** data address presented to RAM for read
+* Stage 1b: modify
+** read data returned from RAM
+** modified data presented to RAM
+* Stage 2 : complete
+** status flags and memory contents updated
 
-=== Stage 1x (JMP indirect only): indirect jump
-- load data returned from RAM (jump address)
-- instruction fetch address presented to RAM
-- execution pauses during this stage
+The pipeline stages for JMP indirect are as follows:
 
-=== Stage 2 : completion
-- load data returned from RAM (if applicable)
-- all registers updated
-
+* Stage 0 : fetch
+** instruction fetch address presented to RAM
+* Stage 1 : decode and execute
+** instruction fetch data (opcode and operands) returned from RAM
+** instruction (opcode) decode
+** address of jump vector presented to RAM for read
+* Stage 1b: jump
+** contents of jump vector value returned from RAM
+** new instruction fetch address presented to RAM
+* Stage 2 : complete
+** no operation
 
 == Reset, NMI and Interrupt Request
 
 To be continued...
 
-== Interfaces
+== Debug
+
+To be continued...
+
+== External Interfaces
+
+To be continued...
+
+== Edge Cases
+
+* self modifying code
+* hardware mapped to locations in zero page or the stack
+* DMA writes to zero page or the stack (timing)
+
+To be continued...
+
+== Initialisation
 
 To be continued...
 

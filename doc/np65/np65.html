@@ -446,13 +446,36 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>A fast 6502 compatible CPU core with tightly coupled RAM.</p>
 </div>
+<hr>
 </div>
 </div>
 <div class="sect1">
-<h2 id="trueperformance"><a class="anchor" href="#trueperformance"></a>Performance</h2>
+<h2 id="truethroughput"><a class="anchor" href="#truethroughput"></a>Throughput</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The np65 achieves close to 1 instruction per clock (IPC). This compares with an IPC of ~3 for the classic NMOS 6502. np65 designs have been implemented with CPU clock speeds of 50MHz on Xilinx 7 series devices (-1 speed grade). An np65 clocked at 50MHz therefore delivers ~150x the performance of a classic NMOS 6502 clocked at 1MHz.</p>
+<p>The np65 achieves one instruction per cycle for almost all opcodes (138 out of 151). Exceptions are as follows; these execute in 2 cycles:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>read-modify-writes accessing 16 bit addresses (INC, DEC, ASL, LSR, ROL, ROR - 12 opcodes in total);</p>
+</li>
+<li>
+<p>JMP relative;</p>
+</li>
+<li>
+<p>modified instructions fetched immediately after modification.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This compares with an average IPC of less than 1/3 for the classic NMOS 6502 (measured on Klaus Dormann&#8217;s 6502 functional test).</p>
+</div>
+<div class="paragraph">
+<p>np65 designs have been implemented with CPU clock speeds of 50MHz on Xilinx 7 series devices (-1 speed grade). An np65 clocked at 50MHz should therefore deliver around ~150x the performance of a classic NMOS 6502 clocked at 1MHz. In certain cases, the performance benefit can be much higher: for a read-modify-write using the zero page indexed addressing mode, the cycle count is down from 6 to 1; for conditional branches the cycle count is down from 5 to 1; for an interrupt, the total overhead is down from 11 cycles to 2.</p>
+</div>
+<div class="paragraph">
+<p>Like the 6502, np65 instruction execution times are deterministic.</p>
 </div>
 </div>
 </div>
@@ -460,38 +483,50 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="truecompatibility"><a class="anchor" href="#truecompatibility"></a>Compatibility</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>np65 includes a decoder (microcode) ROM that is built from a data table contained in a CSV file that can be authored in Excel (an XLS file is provided). A Python script is included to generate VHDL from the CSV file.</p>
+<p>np65 includes a decoder (microcode) ROM that is built from a data table contained in a CSV file. An XLS file is provided to facilitate the creation and editing of the CSV. A Python script is included to generate VHDL from the CSV file.</p>
 </div>
 <div class="paragraph">
 <p>The decoder currently supports all documented instructions of the NMOS 6502. Support for undocumented instructions, as well as other 6502 variants, is planned.</p>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="trueram"><a class="anchor" href="#trueram"></a>RAM</h2>
-<div class="sectionbody">
 <div class="paragraph">
-<p>RAM sizes of 64kbytes, 128kbytes or 256kbytes are supported. The mechanism for translating logical 16 bit CPU addresses into physical RAM addresses to access more than 64k is user defined. The np65_poc proof of concept design implements 16k bank switching similar to <a href="https://en.wikipedia.org/wiki/BBC_Micro">Acorn&#8217;s BBC micro</a>.</p>
-</div>
-<div class="paragraph">
-<p>RAM is physically partitioned into 4 banks, with banks interleaved on byte boundaries. The address for each bank is calculated separately so that unaligned accesses of up to 4 bytes incur no penalty. The opcode and all operands of an instruction are fetched in single cycle. Data accesses of more than a single byte are much less common (e.g. RTI = read 3 bytes from stack) but the same flexibility is implemented. This may be useful if the instruction set is extended with 16- or 32-bit data operations.</p>
-</div>
-<div class="paragraph">
-<p>RAM is clocked at 2x the CPU clock so that DMA accesses may be interleaved with CPU accesses with no penalty. It is also possible to suspend CPU access for increased DMA bandwidth.</p>
-</div>
-<div class="paragraph">
-<p>RAM is dual ported. During CPU accesses, the ports are used to implement concurrent instruction fetches and data loads/stores. During DMA accesses, the ports are bonded and are used to access 8 bytes per cycle.</p>
-</div>
-<div class="paragraph">
-<p>The RAM may be initialised with firmware/software. A Python script is included to generate a VHDL package with initialisation constants from one or more binary files.</p>
+<p>Note that the data caches (described below) require software initialisation. The np65 therefore executes a small amount of "pre-reset" code. This is typically located in the same part of the memory map as hardware registers to avoid consuming any more important platform memory.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="truecaches"><a class="anchor" href="#truecaches"></a>Caches</h2>
+<h2 id="truememory"><a class="anchor" href="#truememory"></a>Memory</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Small caches are provided for zero page and the stack. The zero page cache removes the overhead of a pointer fetch for indexed indirect and indirect indexed address modes. The stack cache accelerates RTS and RTI instructions and may facilitate future instruction set enhancements. Cache coherency is maintained during DMA.</p>
+<p>The np65 core includes RAM which is tightly coupled to the CPU to maximise performance. RAM sizes of 64kbytes, 128kbytes or 256kbytes are supported</p>
+</div>
+<div class="paragraph">
+<p>The mechanism for translating logical 16 bit CPU addresses into physical RAM addresses to access more than 64k is user defined. The np65_poc proof of concept design, for example, implements 16k bank switching similar to <a href="https://en.wikipedia.org/wiki/BBC_Micro">Acorn&#8217;s BBC micro</a>. User logic may also implement write protected (ROM), external memory/registers and empty regions of the memory map as required.</p>
+</div>
+<div class="paragraph">
+<p>RAM is physically partitioned into 4 byte banks, interleaved on byte boundaries. The address for each bank is calculated separately so that up to 4 consecutive bytes may be read or written in a single cycle, regardless of alignment. This used to fetch the opcode and all operands of an instruction together. Data accesses of more than a single byte are much less common (e.g. RTI = read 3 bytes from stack) but the same flexibility is implemented. This may be useful if the instruction set is extended with 16- or 32-bit data operations.</p>
+</div>
+<div class="paragraph">
+<p>RAM is clocked at 2x the CPU clock so that DMA accesses may be interleaved with CPU accesses on alternate cycles with no penalty. CPU access may be suspended to double DMA bandwidth.</p>
+</div>
+<div class="paragraph">
+<p>RAM is dual ported. During CPU accesses, the ports are used to implement concurrent instruction fetches and data loads/stores. During DMA accesses, the ports are bonded and are used to access 8 bytes per cycle (800MByte/s at 100MHz).</p>
+</div>
+<div class="paragraph">
+<p>The RAM may be initialised with firmware/software e.g. ROM contents. A Python script is included to generate a VHDL package with initialisation constants from one or more binary files.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="truedata-caches"><a class="anchor" href="#truedata-caches"></a>Data Caches</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Small (256 byte) data caches are provided for zero page and the stack. The zero page cache removes the overhead of data reads for read-modify-writes, and of pointer fetches for indexed indirect and indirect indexed address modes. The stack cache removes the overhead of stack pulls for RTS and RTI instructions.</p>
+</div>
+<div class="paragraph">
+<p>These caches are kept coherent with main RAM for both CPU and DMA writes.</p>
+</div>
+<div class="paragraph">
+<p>Simple registers are used to cache the contents of the IRQ and NMI vectors, removing the overhead of vector fetch to accelerate interrupt handling.</p>
 </div>
 </div>
 </div>
@@ -499,10 +534,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="truepipeline"><a class="anchor" href="#truepipeline"></a>Pipeline</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>np65 is pipelined just enough to sustain one instruction per cycle for almost all instructions, without incurring any penalties for jumps or conditional branches. The exceptions are RMW instructions (INC, DEC) and JMP relative - these require a single additional cycle. The pipeline stages are described below:</p>
+<p>The np65 has a 3 stage pipeline for most instructions:</p>
 </div>
-<div class="sect2">
-<h3 id="truestage-0-fetch"><a class="anchor" href="#truestage-0-fetch"></a>Stage 0 : fetch</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Stage 0 : fetch</p>
 <div class="ulist">
 <ul>
 <li>
@@ -510,9 +547,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 </ul>
 </div>
-</div>
-<div class="sect2">
-<h3 id="truestage-1-decode-and-execute"><a class="anchor" href="#truestage-1-decode-and-execute"></a>Stage 1 : decode and execute</h3>
+</li>
+<li>
+<p>Stage 1 : decode and execute</p>
 <div class="ulist">
 <ul>
 <li>
@@ -522,7 +559,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>instruction (opcode) decode</p>
 </li>
 <li>
-<p>pointer read from zero page cache (indirect indexed and indexed indirect address modes)</p>
+<p>data or pointer read from zero page cache (if applicable)</p>
 </li>
 <li>
 <p>pull data read from stack cache (RTS and RTI)</p>
@@ -535,51 +572,130 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 </ul>
 </div>
-</div>
-<div class="sect2">
-<h3 id="truestage-1x-rmw-instructions-only-modify"><a class="anchor" href="#truestage-1x-rmw-instructions-only-modify"></a>Stage 1x (RMW instructions only): modify</h3>
+</li>
+<li>
+<p>Stage 2 : complete</p>
 <div class="ulist">
 <ul>
 <li>
-<p>load (read) data returned from RAM</p>
-</li>
-<li>
-<p>store (modified write) data presented to RAM</p>
-</li>
-<li>
-<p>execution pauses during this stage</p>
+<p>registers, status flags and memory contents updated</p>
 </li>
 </ul>
 </div>
+</li>
+</ul>
 </div>
-<div class="sect2">
-<h3 id="truestage-1x-jmp-indirect-only-indirect-jump"><a class="anchor" href="#truestage-1x-jmp-indirect-only-indirect-jump"></a>Stage 1x (JMP indirect only): indirect jump</h3>
+<div class="paragraph">
+<p>The pipeline stages for read-modify-write instructions accessing 16 bit addresses are as follows:</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
-<p>load data returned from RAM (jump address)</p>
-</li>
+<p>Stage 0 : fetch</p>
+<div class="ulist">
+<ul>
 <li>
 <p>instruction fetch address presented to RAM</p>
 </li>
-<li>
-<p>execution pauses during this stage</p>
-</li>
 </ul>
 </div>
-</div>
-<div class="sect2">
-<h3 id="truestage-2-completion"><a class="anchor" href="#truestage-2-completion"></a>Stage 2 : completion</h3>
+</li>
+<li>
+<p>Stage 1 : decode and execute</p>
 <div class="ulist">
 <ul>
 <li>
-<p>load data returned from RAM (if applicable)</p>
+<p>instruction fetch data (opcode and operands) returned from RAM</p>
 </li>
 <li>
-<p>all registers updated</p>
+<p>instruction (opcode) decode</p>
+</li>
+<li>
+<p>data address presented to RAM for read</p>
 </li>
 </ul>
 </div>
+</li>
+<li>
+<p>Stage 1b: modify</p>
+<div class="ulist">
+<ul>
+<li>
+<p>read data returned from RAM</p>
+</li>
+<li>
+<p>modified data presented to RAM</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Stage 2 : complete</p>
+<div class="ulist">
+<ul>
+<li>
+<p>status flags and memory contents updated</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The pipeline stages for JMP indirect are as follows:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Stage 0 : fetch</p>
+<div class="ulist">
+<ul>
+<li>
+<p>instruction fetch address presented to RAM</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Stage 1 : decode and execute</p>
+<div class="ulist">
+<ul>
+<li>
+<p>instruction fetch data (opcode and operands) returned from RAM</p>
+</li>
+<li>
+<p>instruction (opcode) decode</p>
+</li>
+<li>
+<p>address of jump vector presented to RAM for read</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Stage 1b: jump</p>
+<div class="ulist">
+<ul>
+<li>
+<p>contents of jump vector value returned from RAM</p>
+</li>
+<li>
+<p>new instruction fetch address presented to RAM</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Stage 2 : complete</p>
+<div class="ulist">
+<ul>
+<li>
+<p>no operation</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
 </div>
 </div>
 </div>
@@ -592,7 +708,44 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="sect1">
-<h2 id="trueinterfaces"><a class="anchor" href="#trueinterfaces"></a>Interfaces</h2>
+<h2 id="truedebug"><a class="anchor" href="#truedebug"></a>Debug</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To be continued&#8230;&#8203;</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="trueexternal-interfaces"><a class="anchor" href="#trueexternal-interfaces"></a>External Interfaces</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To be continued&#8230;&#8203;</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="trueedge-cases"><a class="anchor" href="#trueedge-cases"></a>Edge Cases</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>self modifying code</p>
+</li>
+<li>
+<p>hardware mapped to locations in zero page or the stack</p>
+</li>
+<li>
+<p>DMA writes to zero page or the stack (timing)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>To be continued&#8230;&#8203;</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="trueinitialisation"><a class="anchor" href="#trueinitialisation"></a>Initialisation</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>To be continued&#8230;&#8203;</p>
@@ -607,7 +760,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-07-17 23:23:20 +0100
+Last updated 2021-07-20 20:23:24 +0100
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/github.min.css">
