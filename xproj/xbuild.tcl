@@ -16,15 +16,15 @@ set_property -name "enable_vhdl_2008" -value "1" -objects [current_project]
 cd xproj/vivado/${xbuild_design}_${xbuild_board}
 
 # add path prefix to file lists
-set vhdl_files [lmap f $vhdl_files {join [list "../../../" ${fpga_src_path} $f] ""}]
+set vhdl_files [lmap f $vhdl_files {join [list "../../../" ${src_path_fpga} $f] ""}]
 if {[info exists bd_tcl_files]} {
-    set bd_tcl_files [lmap f $bd_tcl_files {join [list "../../../" ${fpga_src_path} $f] ""}]
+    set bd_tcl_files [lmap f $bd_tcl_files {join [list "../../../" ${src_path_fpga} $f] ""}]
 } else {
     set bd_tcl_files [list]
 }
-set constr_files [lmap f $constr_files {join [list "../../../" ${fpga_src_path} $f] ""}]
+set constr_files [lmap f $constr_files {join [list "../../../" ${src_path_fpga} $f] ""}]
 if {[info exists sim_files]} {
-    set sim_files [lmap f $sim_files {join [list "../../../" ${sim_src_path} $f] ""}]
+    set sim_files [lmap f $sim_files {join [list "../../../" ${src_path_sim} $f] ""}]
 } else {
     set sim_files [list]
 }

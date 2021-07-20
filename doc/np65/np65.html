@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.8.dev">
-<title>The Tyto Project</title>
+<title>np65</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -438,86 +438,176 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="article">
 <div id="header">
-<h1>The Tyto Project</h1>
+<h1>np65</h1>
 </div>
 <div id="content">
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>The Tyto Project is a collection of open source FPGA designs and IP for retro computing and embedded systems.</p>
-</div>
-<div class="paragraph">
-<p>At present, the designs target <strong>Xilinx 7-Series</strong> FPGAs, and the <strong>Digilent Nexys Video</strong> board, with some support for the <strong>QMTECH Wukong</strong> board. Development is done with the free editions of Xilinx Vitis and Vivado (version <strong>2020.x</strong>) on Windows 10. Note that Vitis is only required for designs that include a MicroBlaze CPU.</p>
+<p>A fast 6502 compatible CPU core with tightly coupled RAM.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="truedesigns"><a class="anchor" href="#truedesigns"></a>Designs</h2>
+<h2 id="trueperformance"><a class="anchor" href="#trueperformance"></a>Performance</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>The np65 achieves close to 1 instruction per clock (IPC). This compares with an IPC of ~3 for the classic NMOS 6502. np65 designs have been implemented with CPU clock speeds of 50MHz on Xilinx 7 series devices (-1 speed grade). An np65 clocked at 50MHz therefore delivers ~150x the performance of a classic NMOS 6502 clocked at 1MHz.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="truecompatibility"><a class="anchor" href="#truecompatibility"></a>Compatibility</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>np65 includes a decoder (microcode) ROM that is built from a data table contained in a CSV file that can be authored in Excel (an XLS file is provided). A Python script is included to generate VHDL from the CSV file.</p>
+</div>
+<div class="paragraph">
+<p>The decoder currently supports all documented instructions of the NMOS 6502. Support for undocumented instructions, as well as other 6502 variants, is planned.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="trueram"><a class="anchor" href="#trueram"></a>RAM</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>RAM sizes of 64kbytes, 128kbytes or 256kbytes are supported. The mechanism for translating logical 16 bit CPU addresses into physical RAM addresses to access more than 64k is user defined. The np65_poc proof of concept design implements 16k bank switching similar to <a href="https://en.wikipedia.org/wiki/BBC_Micro">Acorn&#8217;s BBC micro</a>.</p>
+</div>
+<div class="paragraph">
+<p>RAM is physically partitioned into 4 banks, with banks interleaved on byte boundaries. The address for each bank is calculated separately so that unaligned accesses of up to 4 bytes incur no penalty. The opcode and all operands of an instruction are fetched in single cycle. Data accesses of more than a single byte are much less common (e.g. RTI = read 3 bytes from stack) but the same flexibility is implemented. This may be useful if the instruction set is extended with 16- or 32-bit data operations.</p>
+</div>
+<div class="paragraph">
+<p>RAM is clocked at 2x the CPU clock so that DMA accesses may be interleaved with CPU accesses with no penalty. It is also possible to suspend CPU access for increased DMA bandwidth.</p>
+</div>
+<div class="paragraph">
+<p>RAM is dual ported. During CPU accesses, the ports are used to implement concurrent instruction fetches and data loads/stores. During DMA accesses, the ports are bonded and are used to access 8 bytes per cycle.</p>
+</div>
+<div class="paragraph">
+<p>The RAM may be initialised with firmware/software. A Python script is included to generate a VHDL package with initialisation constants from one or more binary files.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="truecaches"><a class="anchor" href="#truecaches"></a>Caches</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Small caches are provided for zero page and the stack. The zero page cache removes the overhead of a pointer fetch for indexed indirect and indirect indexed address modes. The stack cache accelerates RTS and RTI instructions and may facilitate future instruction set enhancements. Cache coherency is maintained during DMA.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="truepipeline"><a class="anchor" href="#truepipeline"></a>Pipeline</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>np65 is pipelined just enough to sustain one instruction per cycle for almost all instructions, without incurring any penalties for jumps or conditional branches. The exceptions are RMW instructions (INC, DEC) and JMP relative - these require a single additional cycle. The pipeline stages are described below:</p>
+</div>
 <div class="sect2">
-<h3 id="truemb_audio_io"><a class="anchor" href="#truemb_audio_io"></a>mb_audio_io</h3>
-<div class="paragraph">
-<p>A MicroBlaze CPU interfaced to an I<sup>2</sup>S audio codec. <a href="./doc/mb_audio_io/mb_audio_io.html">More&#8230;&#8203;</a></p>
-</div>
-<div class="paragraph">
-<p>Supports: Digilent Nexys Video</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="truemb_display_sd"><a class="anchor" href="#truemb_display_sd"></a>mb_display_sd</h3>
-<div class="paragraph">
-<p>A MicroBlaze CPU with a standard definition character display, similar to the text modes of a PC VGA adapter. <a href="./doc/mb_display_sd/mb_display_sd.html">More&#8230;&#8203;</a></p>
-</div>
-<div class="paragraph">
-<p>Supports: Digilent Nexys Video, QMTECH Wukong</p>
+<h3 id="truestage-0-fetch"><a class="anchor" href="#truestage-0-fetch"></a>Stage 0 : fetch</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>instruction fetch address presented to RAM</p>
+</li>
+</ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="truehdmi_tpg"><a class="anchor" href="#truehdmi_tpg"></a>hdmi_tpg</h3>
-<div class="paragraph">
-<p>An HDMI video test pattern generator, supporting resolutions from SD to full HD. Also generates an audio test tone. <a href="./doc/hdmi_tpg/hdmi_tpg.html">More&#8230;&#8203;</a></p>
-</div>
-<div class="paragraph">
-<p>Supports: Digilent Nexys Video, QMTECH Wukong</p>
+<h3 id="truestage-1-decode-and-execute"><a class="anchor" href="#truestage-1-decode-and-execute"></a>Stage 1 : decode and execute</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>instruction fetch data (opcode and operands) returned from RAM</p>
+</li>
+<li>
+<p>instruction (opcode) decode</p>
+</li>
+<li>
+<p>pointer read from zero page cache (indirect indexed and indexed indirect address modes)</p>
+</li>
+<li>
+<p>pull data read from stack cache (RTS and RTI)</p>
+</li>
+<li>
+<p>load/store address presented to RAM (if applicable)</p>
+</li>
+<li>
+<p>store data presented to RAM (if applicable)</p>
+</li>
+</ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="truenp65_poc"><a class="anchor" href="#truenp65_poc"></a>np65_poc</h3>
-<div class="paragraph">
-<p>A proof-of-concept demonstration of the <a href="./doc/np65/np65.html">np65</a> 6502 compatible CPU core. Runs Klaus Dormann&#8217;s 6502 functional test code in a loop, incrementing an 8 bit LED pattern each time round. Shows a 150x speedup compared with the classic 1MHz NMOS 6502. <a href="./doc/np65_poc/np65_poc.html">More&#8230;&#8203;</a></p>
+<h3 id="truestage-1x-rmw-instructions-only-modify"><a class="anchor" href="#truestage-1x-rmw-instructions-only-modify"></a>Stage 1x (RMW instructions only): modify</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>load (read) data returned from RAM</p>
+</li>
+<li>
+<p>store (modified write) data presented to RAM</p>
+</li>
+<li>
+<p>execution pauses during this stage</p>
+</li>
+</ul>
 </div>
-<div class="paragraph">
-<p>Supports: Digilent Nexys Video</p>
+</div>
+<div class="sect2">
+<h3 id="truestage-1x-jmp-indirect-only-indirect-jump"><a class="anchor" href="#truestage-1x-jmp-indirect-only-indirect-jump"></a>Stage 1x (JMP indirect only): indirect jump</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>load data returned from RAM (jump address)</p>
+</li>
+<li>
+<p>instruction fetch address presented to RAM</p>
+</li>
+<li>
+<p>execution pauses during this stage</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="truestage-2-completion"><a class="anchor" href="#truestage-2-completion"></a>Stage 2 : completion</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>load data returned from RAM (if applicable)</p>
+</li>
+<li>
+<p>all registers updated</p>
+</li>
+</ul>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="truecredits"><a class="anchor" href="#truecredits"></a>Credits</h2>
+<h2 id="truereset-nmi-and-interrupt-request"><a class="anchor" href="#truereset-nmi-and-interrupt-request"></a>Reset, NMI and Interrupt Request</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Documentation is authored in <a href="https://asciidocfx.com/">AsciidocFX</a>. SVG diagrams are drawn in <a href="https://www.draw.io/">draw.io</a>.</p>
+<p>To be continued&#8230;&#8203;</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="truelicense"><a class="anchor" href="#truelicense"></a>License</h2>
+<h2 id="trueinterfaces"><a class="anchor" href="#trueinterfaces"></a>Interfaces</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This file is part of The Tyto Project. The Tyto Project is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</p>
+<p>To be continued&#8230;&#8203;</p>
 </div>
-<div class="paragraph">
-<p>The Tyto Project is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.</p>
-</div>
-<div class="paragraph">
-<p>You should have received a copy of the GNU Lesser General Public License along with The Tyto Project. If not, see <a href="https://www.gnu.org/licenses/" class="bare">https://www.gnu.org/licenses/</a>.</p>
-</div>
+<style>
+  .imageblock > .title {
+    text-align: inherit;
+  }
+</style>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-07-17 23:23:18 +0100
+Last updated 2021-07-17 23:23:20 +0100
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/github.min.css">

@@ -2,7 +2,7 @@
 
 The Tyto Project is a collection of open source FPGA designs and IP for retro computing and embedded systems.
 
-At present, the designs target *Xilinx 7-Series* FPGAs, and the *Digilent Nexys Video* board, with some support for the *QMTECH Wukong* board. Development is done with the free editions of Xilinx Vitis and Vivado (version *2020.1*) on Windows 10. Note that Vitis is only required for designs that include a MicroBlaze CPU.
+At present, the designs target *Xilinx 7-Series* FPGAs, and the *Digilent Nexys Video* board, with some support for the *QMTECH Wukong* board. Development is done with the free editions of Xilinx Vitis and Vivado (version *2020.x*) on Windows 10. Note that Vitis is only required for designs that include a MicroBlaze CPU.
 
 == Designs
 
@@ -23,6 +23,12 @@ Supports: Digilent Nexys Video, QMTECH Wukong
 An HDMI video test pattern generator, supporting resolutions from SD to full HD. Also generates an audio test tone. <<./doc/hdmi_tpg/hdmi_tpg.adoc#,More...>>
 
 Supports: Digilent Nexys Video, QMTECH Wukong
+
+=== np65_poc
+
+A proof-of-concept demonstration of the <<./doc/np65/np65.adoc#,np65>> 6502 compatible CPU core. Runs Klaus Dormann's 6502 functional test code in a loop, incrementing an 8 bit LED pattern each time round. Shows a 150x speedup compared with the classic 1MHz NMOS 6502. <<./doc/np65_poc/np65_poc.adoc#,More...>>
+
+Supports: Digilent Nexys Video
 
 == Credits
 
