@@ -178,7 +178,6 @@ architecture synth of top is
     signal rst_100m    : std_logic;
     signal clk_100m    : std_logic;
     signal clk_50m     : std_logic;
-    signal clk_8m      : std_logic;
     signal ui_cc       : std_logic;
     signal ui_rdy      : std_logic;
     signal ui_en       : std_logic;
@@ -218,7 +217,6 @@ begin
             rst_100m    => rst_100m,
             clk_100m    => clk_100m,
             clk_50m     => clk_50m,
-            clk_8m      => clk_8m,
             ui_cc       => ui_cc,
             ui_rdy      => ui_rdy,
             ui_en       => ui_en,
@@ -250,8 +248,7 @@ begin
     -- I/O
 
     ja(0) <= clk_50m;
-    ja(1) <= clk_8m;
-    ja(7 downto 2) <= (others => '0');
+    ja(7 downto 1) <= (others => '0');
 
     -- unused I/O
 

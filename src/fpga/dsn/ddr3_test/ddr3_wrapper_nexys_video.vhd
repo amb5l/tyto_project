@@ -14,7 +14,6 @@ entity ddr3_wrapper is
         rst_100m    : out   std_logic;
         clk_100m    : out   std_logic;
         clk_50m     : out   std_logic;
-        clk_8m      : out   std_logic;
 
         -- user interface (clk_100m synchronous)
 
@@ -67,7 +66,6 @@ begin
             ui_clk_sync_rst     => rst_100m,
             ui_clk              => clk_100m,
             ui_addn_clk_1       => clk_50m,
-            ui_addn_clk_2       => clk_8m,
             device_temp         => open,
             init_calib_complete => ui_cc,
 

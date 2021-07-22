@@ -7,7 +7,7 @@ if {$xbuild_board == "nexys_video"} {
     error "unsupported board"
 }
 set ip_tcl_files [list \
-    "xip/ddr3_${xbuild_board}/mig_50_8.tcl" \
+    "xip/ddr3_${xbuild_board}/mig_50.tcl" \
 ]
 set vhdl_files [list \
     "dsn/${xbuild_design}/${xbuild_design}_${xbuild_board}.vhd" \
