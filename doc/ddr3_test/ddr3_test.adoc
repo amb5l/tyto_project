@@ -1,0 +1,45 @@
+= ddr3_test
+
+A simple DDR3 SDRAM tester. Performs maximum bandwidth write-then-read tests using https://github.com/jorisvr/vhdl_prng[Joris van Rantwijk's Pseudo Random Number Generator "xoshiro128++ 1.0"]. Also demonstrates the addition of user defined clocks, including the 200MHz IODELAYCTRL reference clock, to the DDR3 IP core MMCM in a VHDL flow.
+
+Supported boards: *Digilent Nexys Video* and *QMTECH Wukong*.
+
+== Build Procedure
+
+The following instructions apply to Windows 10, and require Xilinx Vivado and Vitis version 2020.1 or later to be installed.
+
+To create the Vivado project, and build the FPGA bitstream:
+
+. Open a Windows command prompt, and change directory to the location of the repository files.
+. Run the `settings64` batch file from the Xilinx Vivado installation - if required - to set up your path for the Xilinx command line tools. For example:
+
+  C:\> C:\Xilinx\Vivado\2020.1\settings64.bat
+
+. Run the `xbuild` batch file, specifying the design name (`hdmi_tpg`) and board name (`nexys_video` or `qmtech_wukong`) as arguments, to create the Vivado project in the `xproj` directory, and to build an FPGA bitstream. The number of parallel jobs to be used during compilation by Vivado may also be specified on the command line; this defaults to 1 if not specified. For example:
+
+  C:\> cd \work\tyto_project
+  C:\work\tyto_project> xbuild.bat ddr3_test nexys_video 8
+
+After the build process has completed, the Vivado project may be opened in the Vivado IDE.
+
+== Programming Procedure
+
+First, ensure that the FPGA board is correctly connected to the host PC and the display monitor as follows:
+
+Digilent Nexys Video:: Connect the *PROG* port to the host PC.
+
+QMTECH Wukong:: Connect *J1* to a suitable JTAG programmer (e.g. https://reference.digilentinc.com/reference/programmers/jtag-hs2/start[Digilent JTAG-HS2]).
+
+To program the bitstream into the board, run the `xprog` batch file, specifying the design name and board name as arguments. For example:
+
+  C:\work\tyto_project> xprog.bat ddr3_test nexys_video
+
+When the programming process has completed, the LEDs will start displaying the test status.
+
+++++
+<style>
+  .imageblock > .title {
+    text-align: inherit;
+  }
+</style>
+++++
