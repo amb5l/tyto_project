@@ -1,5 +1,6 @@
 # ref clock
 create_clock -add -name clki_100m -period 10 [get_ports clki_100m] ; # 100MHz
+set_property CLOCK_DEDICATED_ROUTE BACKBONE [get_nets clki_100m_IBUF]
 
 # physical constraints
 set_property -dict { PACKAGE_PIN R4 IOSTANDARD LVCMOS33 } [get_ports { clki_100m }];

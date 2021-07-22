@@ -30,3 +30,33 @@ proc hack_ddr3_mig {filename} {
 
 hack_ddr3_mig "fpga.gen/sources_1/ip/ddr3/ddr3/user_design/rtl/ddr3_mig.vhd"
 hack_ddr3_mig "fpga.gen/sources_1/ip/ddr3/ddr3/user_design/rtl/ddr3_mig_sim.vhd"
+
+set filename "fpga.gen/sources_1/ip/ddr3/ddr3/user_design/rtl/clocking/mig_7series_v4_2_infrastructure.v"
+set f [open $filename "r"]
+set lines [split [read $f] "\n"]
+close $f
+for { set i 0 } { $i < [llength $lines] } { incr i } {
+    set line [lindex $lines $i]
+    set line [string map [list "UI_EXTRA_CLOCKS = \"FALSE\"" "UI_EXTRA_CLOCKS = \"TRUE\""    ] $line]
+    lset lines $i $line
+}
+set f [open $filename "w"]
+foreach line $lines {
+    puts $f $line
+}
+close $f
+
+set filename "fpga.gen/sources_1/ip/ddr3/ddr3/user_design/constraints/ddr3_ooc.xdc"
+set f [open $filename "r"]
+set lines [split [read $f] "\n"]
+close $f
+for { set i 0 } { $i < [llength $lines] } { incr i } {
+    set line [lindex $lines $i]
+    set line [string map [list "create_clock -period 5 [get_ports clk_ref_i]" "# create_clock -period 5 [get_ports clk_ref_i]"    ] $line]
+    lset lines $i $line
+}
+set f [open $filename "w"]
+foreach line $lines {
+    puts $f $line
+}
+close $f

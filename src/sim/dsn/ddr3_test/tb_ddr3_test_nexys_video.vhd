@@ -43,6 +43,9 @@ begin
     end process;
 
     UUT: entity xil_defaultlib.top
+        generic map (
+            TEST_SIZE       => '0' & x"000100"
+        )
         port map (
             clki_100m       => clki_100m,
             led             => led,

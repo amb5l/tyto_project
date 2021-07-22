@@ -21,6 +21,11 @@ use ieee.std_logic_1164.all;
 library xil_defaultlib;
 
 entity top is
+    generic (
+
+        TEST_SIZE       : std_logic_vector(28 downto 4) := '0' & x"000000" -- defaults to max (512MBytes)
+
+    );
     port (
 
         -- clocks
@@ -193,6 +198,9 @@ architecture synth of top is
 begin
 
     TEST: entity xil_defaultlib.ddr3_test
+        generic map (
+            TEST_SIZE   => TEST_SIZE
+        )
         port map (
             clk_100m    => clk_100m,
             rst_100m    => rst_100m,

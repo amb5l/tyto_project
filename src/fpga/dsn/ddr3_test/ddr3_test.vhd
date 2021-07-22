@@ -5,6 +5,9 @@ use ieee.numeric_std.all;
 library xil_defaultlib;
 
 entity ddr3_test is
+    generic (
+        TEST_SIZE   : std_logic_vector(28 downto 4)
+    );
     port (
 
         clk_100m    : in   std_logic;
@@ -28,8 +31,6 @@ entity ddr3_test is
 end entity ddr3_test;
 
 architecture synth of ddr3_test is
-
-    constant TEST_SIZE : std_logic_vector(28 downto 4) := '0' & x"000100";
 
     type slv_127_0_t is array(natural range <>) of std_logic_vector(127 downto 0);
 

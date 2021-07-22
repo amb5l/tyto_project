@@ -16,7 +16,6 @@ proc hack_ddr3_mig {filename} {
         set line [string map [list "UI_EXTRA_CLOCKS : string := \"FALSE\";"            "UI_EXTRA_CLOCKS : string := \"TRUE\";"                                                     ] $line]
         set line [string map [list "MMCM_CLKOUT0_EN     : string := \"FALSE\";"        "MMCM_CLKOUT0_EN     : string := \"TRUE\";"                                                 ] $line]
         set line [string map [list "MMCM_CLKOUT1_EN     : string := \"FALSE\";"        "MMCM_CLKOUT1_EN     : string := \"TRUE\";"                                                 ] $line]
-        set line [string map [list "MMCM_CLKOUT2_EN     : string := \"FALSE\";"        "MMCM_CLKOUT2_EN     : string := \"TRUE\";"                                                 ] $line]
         set line [string map [list "MMCM_CLKOUT0_DIVIDE : integer := 1;"               "MMCM_CLKOUT0_DIVIDE : integer := 4;"                                                       ] $line]
         set line [string map [list "MMCM_CLKOUT1_DIVIDE : integer := 1;"               "MMCM_CLKOUT1_DIVIDE : integer := 16;"                                                      ] $line]
         set line [string map [list "ui_clk               : out   std_logic;"           "ui_clk               : out   std_logic;\r\n\r\n   ui_addn_clk_1        : out   std_logic;" ] $line]
@@ -44,6 +43,36 @@ for { set i 0 } { $i < [llength $lines] } { incr i } {
     set line [lindex $lines $i]
     set line [string map [list "ui_clk                    : out   std_logic;"     "ui_clk                    : out   std_logic;\r\n\r\n      ui_addn_clk_1             : out   std_logic;"   ] $line]
     set line [string map [list "ui_clk                         => ui_clk,"        "ui_clk                         => ui_clk,\r\n\r\n       ui_addn_clk_1                  => ui_addn_clk_1," ] $line]
+    lset lines $i $line
+}
+set f [open $filename "w"]
+foreach line $lines {
+    puts $f $line
+}
+close $f
+
+set filename "fpga.gen/sources_1/ip/ddr3/ddr3/user_design/rtl/clocking/mig_7series_v4_2_infrastructure.v"
+set f [open $filename "r"]
+set lines [split [read $f] "\n"]
+close $f
+for { set i 0 } { $i < [llength $lines] } { incr i } {
+    set line [lindex $lines $i]
+    set line [string map [list "UI_EXTRA_CLOCKS = \"FALSE\"" "UI_EXTRA_CLOCKS = \"TRUE\""    ] $line]
+    lset lines $i $line
+}
+set f [open $filename "w"]
+foreach line $lines {
+    puts $f $line
+}
+close $f
+
+set filename "fpga.gen/sources_1/ip/ddr3/ddr3/user_design/constraints/ddr3_ooc.xdc"
+set f [open $filename "r"]
+set lines [split [read $f] "\n"]
+close $f
+for { set i 0 } { $i < [llength $lines] } { incr i } {
+    set line [lindex $lines $i]
+    set line [string map [list "create_clock -period 5 [get_ports clk_ref_i]" "# create_clock -period 5 [get_ports clk_ref_i]"    ] $line]
     lset lines $i $line
 }
 set f [open $filename "w"]
