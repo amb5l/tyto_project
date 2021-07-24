@@ -21,11 +21,6 @@ use ieee.std_logic_1164.all;
 library xil_defaultlib;
 
 entity top is
-    generic (
-
-        TEST_SIZE       : std_logic_vector(28 downto 4) := '0' & x"000000" -- defaults to max (512MBytes)
-
-    );
     port (
 
         -- clocks
@@ -43,7 +38,7 @@ entity top is
 --      btn_r           : in    std_logic;
 --      btn_u           : in    std_logic;
         btn_rst_n       : in    std_logic;
---      sw              : in    std_logic_vector(7 downto 0);
+        sw              : in    std_logic_vector(7 downto 0);
 
         -- OLED
         oled_res_n      : out   std_logic;
@@ -180,31 +175,37 @@ end entity top;
 
 architecture synth of top is
 
-    signal rst_100m    : std_logic;
-    signal clk_100m    : std_logic;
-    signal clk_50m     : std_logic;
-    signal ui_cc       : std_logic;
-    signal ui_rdy      : std_logic;
-    signal ui_en       : std_logic;
-    signal ui_r_w      : std_logic;
-    signal ui_a        : std_logic_vector(28 downto 4);
-    signal ui_wrdy     : std_logic;
-    signal ui_we       : std_logic;
-    signal ui_wbe      : std_logic_vector(15 downto 0);
-    signal ui_wd       : std_logic_vector(127 downto 0);
-    signal ui_rd       : std_logic_vector(127 downto 0);
-    signal ui_rstb     : std_logic;
+    signal rst_100m     : std_logic;
+    signal clk_100m     : std_logic;
+    signal clk_50m      : std_logic;
+    signal ui_cc        : std_logic;
+    signal ui_rdy       : std_logic;
+    signal ui_en        : std_logic;
+    signal ui_r_w       : std_logic;
+    signal ui_a         : std_logic_vector(28 downto 4);
+    signal ui_wrdy      : std_logic;
+    signal ui_we        : std_logic;
+    signal ui_wbe       : std_logic_vector(15 downto 0);
+    signal ui_wd        : std_logic_vector(127 downto 0);
+    signal ui_rd        : std_logic_vector(127 downto 0);
+    signal ui_rstb      : std_logic;
+
+    signal stat_run     : std_logic;
+    signal stat_passes  : std_logic_vector(31 downto 0);
+    signal stat_errors  : std_logic_vector(31 downto 0);
 
 begin
 
     TEST: entity xil_defaultlib.ddr3_test
-        generic map (
-            TEST_SIZE   => TEST_SIZE
-        )
         port map (
             clk_100m    => clk_100m,
             rst_100m    => rst_100m,
-            led         => led,
+            ctrl_run    => sw(6),
+            ctrl_slow   => sw(5),
+            ctrl_size   => sw(4 downto 0),
+            stat_run    => stat_run,
+            stat_passes => stat_passes,
+            stat_errors => stat_errors,
             ui_cc       => ui_cc,
             ui_rdy      => ui_rdy,
             ui_en       => ui_en,
@@ -218,7 +219,7 @@ begin
             ui_rstb     => ui_rstb
         );
 
-    MC: entity xil_defaultlib.ddr3_wrapper
+    MC: entity xil_defaultlib.ddr3_wrapper_nexys_video
         port map (
             xrst        => not btn_rst_n,
             xclk        => clki_100m,
@@ -252,11 +253,13 @@ begin
             ddr3_dqs_n  => ddr3_dqs_n
         );
 
-
     -- I/O
 
     ja(0) <= clk_50m;
     ja(7 downto 1) <= (others => '0');
+    led(7) <= stat_run;
+    led(6) <= '1' when stat_errors /= x"00000000" else '0';
+    led(5 downto 0) <= stat_passes(5 downto 0) when sw(7) = '0' else stat_errors(5 downto 0) when sw(7) = '1';
 
     -- unused I/O
 

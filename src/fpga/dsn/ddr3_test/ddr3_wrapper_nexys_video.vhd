@@ -1,9 +1,26 @@
+--------------------------------------------------------------------------------
+-- ddr3_wrapper_nexys_video.vhd                                               --
+-- Simple wrapper for DDR3 memory controller IP for Digilent Nexys Video.     --
+--------------------------------------------------------------------------------
+-- (C) Copyright 2021 Adam Barnes <ambarnes@gmail.com>                        --
+-- This file is part of The Tyto Project. The Tyto Project is free software:  --
+-- you can redistribute it and/or modify it under the terms of the GNU Lesser --
+-- General Public License as published by the Free Software Foundation,       --
+-- either version 3 of the License, or (at your option) any later version.    --
+-- The Tyto Project is distributed in the hope that it will be useful, but    --
+-- WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY --
+-- or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public     --
+-- License for more details. You should have received a copy of the GNU       --
+-- Lesser General Public License along with The Tyto Project. If not, see     --
+-- https://www.gnu.org/licenses/.                                             --
+--------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 
 library xil_defaultlib;
 
-entity ddr3_wrapper is
+entity ddr3_wrapper_nexys_video is
     port (
 
         -- clock and reset
@@ -50,9 +67,9 @@ entity ddr3_wrapper is
         ddr3_dqs_n  : inout std_logic_vector(1 downto 0)
 
     );
-end entity ddr3_wrapper;
+end entity ddr3_wrapper_nexys_video;
 
-architecture synth of ddr3_wrapper is
+architecture synth of ddr3_wrapper_nexys_video is
 
 begin
 
@@ -69,7 +86,7 @@ begin
             device_temp         => open,
             init_calib_complete => ui_cc,
 
-            app_addr            => ui_a & "0000",
+            app_addr            => '0' & ui_a & "000",
             app_cmd             => "00" & ui_r_w,
             app_en              => ui_en,
             app_rdy             => ui_rdy,

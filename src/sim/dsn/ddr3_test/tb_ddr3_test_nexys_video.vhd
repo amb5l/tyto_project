@@ -1,3 +1,20 @@
+--------------------------------------------------------------------------------
+-- tb_ddr3_test_nexys_video.vhd                                               --
+-- Simulation testbench for ddr3_test_nexys_video.vhd.                        --
+--------------------------------------------------------------------------------
+-- (C) Copyright 2021 Adam Barnes <ambarnes@gmail.com>                        --
+-- This file is part of The Tyto Project. The Tyto Project is free software:  --
+-- you can redistribute it and/or modify it under the terms of the GNU Lesser --
+-- General Public License as published by the Free Software Foundation,       --
+-- either version 3 of the License, or (at your option) any later version.    --
+-- The Tyto Project is distributed in the hope that it will be useful, but    --
+-- WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY --
+-- or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public     --
+-- License for more details. You should have received a copy of the GNU       --
+-- Lesser General Public License along with The Tyto Project. If not, see     --
+-- https://www.gnu.org/licenses/.                                             --
+--------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -11,6 +28,7 @@ architecture sim of tb_ddr3_test_nexys_video is
     signal clki_100m    : std_logic;
     signal btn_rst_n    : std_logic;
     signal led          : std_logic_vector(7 downto 0);
+    signal sw           : std_logic_vector(7 downto 0);
 
     signal ddr3_rst_n   : std_logic;
     signal ddr3_ck_p    : std_logic_vector(0 downto 0);
@@ -37,18 +55,20 @@ begin
     process
     begin
         btn_rst_n <= '0';
+        sw(7) <= '0'; -- display passes on LEDs
+        sw(6) <= '1'; -- run
+        sw(5) <= '0'; -- fast
+        sw(4 downto 0) <= "01000"; -- 2**8 = 256 bytes
         wait for 100ns;
         btn_rst_n <= '1';
         wait;
     end process;
 
     UUT: entity xil_defaultlib.top
-        generic map (
-            TEST_SIZE       => '0' & x"000100"
-        )
         port map (
             clki_100m       => clki_100m,
             led             => led,
+            sw              => sw,
             btn_rst_n       => btn_rst_n,
             oled_res_n      => open,
             oled_d_c        => open,
