@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.8.dev">
-<title>The Tyto Project</title>
+<title>ddr3_test</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -438,95 +438,176 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="article">
 <div id="header">
-<h1>The Tyto Project</h1>
+<h1>ddr3_test</h1>
 </div>
 <div id="content">
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>The Tyto Project is a collection of open source FPGA designs and IP for retro computing and embedded systems.</p>
+<p>A simple DDR3 SDRAM tester. Performs maximum bandwidth write-then-read tests using <a href="https://github.com/jorisvr/vhdl_prng">Joris van Rantwijk&#8217;s Pseudo Random Number Generator "xoshiro128++ 1.0"</a>. Also demonstrates how to hack additional clocks into the DDR3 IP core&#8217;s MMCM, including the 200MHz IODELAYCTRL reference clock.</p>
 </div>
 <div class="paragraph">
-<p>At present, the designs target <strong>Xilinx 7-Series</strong> FPGAs, and the <strong>Digilent Nexys Video</strong> board, with some support for the <strong>QMTECH Wukong</strong> board. Development is done with the free editions of Xilinx Vitis and Vivado (version <strong>2020.x</strong>) on Windows 10. Note that Vitis is only required for designs that include a MicroBlaze CPU.</p>
+<p>Supported boards: <strong>Digilent Nexys Video</strong> and <strong>QMTECH Wukong</strong>.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="truedesigns"><a class="anchor" href="#truedesigns"></a>Designs</h2>
+<h2 id="truebuild-procedure"><a class="anchor" href="#truebuild-procedure"></a>Build Procedure</h2>
 <div class="sectionbody">
-<div class="sect2">
-<h3 id="truemb_audio_io"><a class="anchor" href="#truemb_audio_io"></a>mb_audio_io</h3>
 <div class="paragraph">
-<p>A MicroBlaze CPU interfaced to an I<sup>2</sup>S audio codec. <a href="./doc/mb_audio_io/mb_audio_io.html">More&#8230;&#8203;</a></p>
+<p>The following instructions apply to Windows 10, and require Xilinx Vivado and Vitis version 2020.1 or later to be installed.</p>
 </div>
 <div class="paragraph">
-<p>Supports: Digilent Nexys Video</p>
+<p>To create the Vivado project, and build the FPGA bitstream:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Open a Windows command prompt, and change directory to the location of the repository files.</p>
+</li>
+<li>
+<p>Run the <code>settings64</code> batch file from the Xilinx Vivado installation - if required - to set up your path for the Xilinx command line tools. For example:</p>
+<div class="literalblock">
+<div class="content">
+<pre>C:\&gt; C:\Xilinx\Vivado\2020.1\settings64.bat</pre>
 </div>
 </div>
-<div class="sect2">
-<h3 id="truemb_display_sd"><a class="anchor" href="#truemb_display_sd"></a>mb_display_sd</h3>
-<div class="paragraph">
-<p>A MicroBlaze CPU with a standard definition character display, similar to the text modes of a PC VGA adapter. <a href="./doc/mb_display_sd/mb_display_sd.html">More&#8230;&#8203;</a></p>
-</div>
-<div class="paragraph">
-<p>Supports: Digilent Nexys Video, QMTECH Wukong</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="truehdmi_tpg"><a class="anchor" href="#truehdmi_tpg"></a>hdmi_tpg</h3>
-<div class="paragraph">
-<p>An HDMI video test pattern generator, supporting resolutions from SD to full HD. Also generates an audio test tone. <a href="./doc/hdmi_tpg/hdmi_tpg.html">More&#8230;&#8203;</a></p>
-</div>
-<div class="paragraph">
-<p>Supports: Digilent Nexys Video, QMTECH Wukong</p>
+</li>
+<li>
+<p>Run the <code>xbuild</code> batch file, specifying the design name (<code>hdmi_tpg</code>) and board name (<code>nexys_video</code> or <code>qmtech_wukong</code>) as arguments, to create the Vivado project in the <code>xproj</code> directory, and to build an FPGA bitstream. The number of parallel jobs to be used during compilation by Vivado may also be specified on the command line; this defaults to 1 if not specified. For example:</p>
+<div class="literalblock">
+<div class="content">
+<pre>C:\&gt; cd \work\tyto_project
+C:\work\tyto_project&gt; xbuild.bat ddr3_test nexys_video 8</pre>
 </div>
 </div>
-<div class="sect2">
-<h3 id="truenp65_poc"><a class="anchor" href="#truenp65_poc"></a>np65_poc</h3>
-<div class="paragraph">
-<p>A proof-of-concept demonstration of the <a href="./doc/np65/np65.html">np65</a> 6502 compatible CPU core. Runs Klaus Dormann&#8217;s 6502 functional test code in a loop, incrementing an 8 bit LED pattern each time round. Shows a 150x speedup compared with the classic 1MHz NMOS 6502. <a href="./doc/np65_poc/np65_poc.html">More&#8230;&#8203;</a></p>
-</div>
-<div class="paragraph">
-<p>Supports: Digilent Nexys Video, QMTECH Wukong</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="trueddr3_test"><a class="anchor" href="#trueddr3_test"></a>ddr3_test</h3>
-<div class="paragraph">
-<p>A simple DDR3 SDRAM tester based on <a href="https://github.com/jorisvr/vhdl_prng">Joris van Rantwijk&#8217;s Pseudo Random Number Generator</a>. Also demonstrates the addition of user defined clocks, including the 200MHz IODELAYCTRL reference clock, to the DDR3 IP core MMCM. <a href="./doc/ddr3_test/ddr3_test.html">More&#8230;&#8203;</a></p>
+</li>
+</ol>
 </div>
 <div class="paragraph">
-<p>Supports: Digilent Nexys Video</p>
-</div>
+<p>After the build process has completed, the Vivado project may be opened in the Vivado IDE.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="truecredits"><a class="anchor" href="#truecredits"></a>Credits</h2>
+<h2 id="trueprogramming-procedure"><a class="anchor" href="#trueprogramming-procedure"></a>Programming Procedure</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Documentation is authored in <a href="https://asciidocfx.com/">AsciidocFX</a>. SVG diagrams are drawn in <a href="https://www.draw.io/">draw.io</a>.</p>
+<p>First, ensure that the FPGA board is correctly connected to the host PC as follows:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Digilent Nexys Video</dt>
+<dd>
+<p>Connect the <strong>PROG</strong> port to the host PC.</p>
+</dd>
+<dt class="hdlist1">QMTECH Wukong</dt>
+<dd>
+<p>Connect <strong>J1</strong> to a suitable JTAG programmer (e.g. <a href="https://reference.digilentinc.com/reference/programmers/jtag-hs2/start">Digilent JTAG-HS2</a>).</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>To program the bitstream into the board, run the <code>xprog</code> batch file, specifying the design name and board name as arguments. For example:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>C:\work\tyto_project&gt; xprog.bat ddr3_test nexys_video</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the programming process has completed, the LEDs will start displaying the test status.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="truelicense"><a class="anchor" href="#truelicense"></a>License</h2>
+<h2 id="trueoperation"><a class="anchor" href="#trueoperation"></a>Operation</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This file is part of The Tyto Project. The Tyto Project is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</p>
+<p>Test control and status indication depends on the board being used:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Digilent Nexys Video</dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p>SW4-0 sets the test size in bytes as a power of 2:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>00100 = 4: 2^4 = 16 Bytes (minimum)</p>
+</li>
+<li>
+<p>01000 = 8: 2^8 = 256 Bytes</p>
+</li>
+<li>
+<p>11101 = 29: 2^29 = 512MBytes (maximum)</p>
+</li>
+<li>
+<p>OFF = 0, ON = 1</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>SW5 enables slow testing (once per second) when ON</p>
+</li>
+<li>
+<p>SW6 is a run/stop control (ON = run)</p>
+</li>
+<li>
+<p>SW7 switches between pass and error count display - see below</p>
+</li>
+<li>
+<p>LED7 = heartbeat (toggles every time round the test)</p>
+</li>
+<li>
+<p>LED6 = at least one error has occurred</p>
+</li>
+<li>
+<p>LED5-0 = LS 6 bits of test pass count (SW7 = OFF) or total error count (SW7 = ON)</p>
+</li>
+</ul>
+</div>
+</dd>
+</dl>
 </div>
 <div class="paragraph">
-<p>The Tyto Project is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.</p>
+<p>Note that changing the test size during a test can cause an error. Press the CPU_RESET button to restart the test.</p>
 </div>
-<div class="paragraph">
-<p>You should have received a copy of the GNU Lesser General Public License along with The Tyto Project. If not, see <a href="https://www.gnu.org/licenses/" class="bare">https://www.gnu.org/licenses/</a>.</p>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">QMTECH Wukong</dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p>D5 = heartbeat (toggles every time round the test)</p>
+</li>
+<li>
+<p>D6 = at least one error has occurred</p>
+</li>
+<li>
+<p>test size is fixed at 256MBytes</p>
+</li>
+</ul>
 </div>
+</dd>
+</dl>
+</div>
+<style>
+  .imageblock > .title {
+    text-align: inherit;
+  }
+</style>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-07-24 20:53:37 +0100
+Last updated 2021-07-24 20:56:55 +0100
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/github.min.css">
