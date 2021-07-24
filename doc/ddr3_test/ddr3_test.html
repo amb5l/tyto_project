@@ -493,7 +493,7 @@ C:\work\tyto_project&gt; xbuild.bat ddr3_test nexys_video 8</pre>
 <h2 id="trueprogramming-procedure"><a class="anchor" href="#trueprogramming-procedure"></a>Programming Procedure</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>First, ensure that the FPGA board is correctly connected to the host PC and the display monitor as follows:</p>
+<p>First, ensure that the FPGA board is correctly connected to the host PC as follows:</p>
 </div>
 <div class="dlist">
 <dl>
@@ -537,13 +537,13 @@ C:\work\tyto_project&gt; xbuild.bat ddr3_test nexys_video 8</pre>
 <div class="ulist">
 <ul>
 <li>
-<p>00100 = 4: 2**4 = 16 Bytes (minimum)</p>
+<p>00100 = 4: 2^4 = 16 Bytes (minimum)</p>
 </li>
 <li>
-<p>01000 = 8: 2**8 = 256 Bytes</p>
+<p>01000 = 8: 2^8 = 256 Bytes</p>
 </li>
 <li>
-<p>11101 = 29: 2**29 = 512MBytes (maximum)</p>
+<p>11101 = 29: 2^29 = 512MBytes (maximum)</p>
 </li>
 <li>
 <p>OFF = 0, ON = 1</p>
@@ -590,7 +590,7 @@ C:\work\tyto_project&gt; xbuild.bat ddr3_test nexys_video 8</pre>
 <p>D6 = at least one error has occurred</p>
 </li>
 <li>
-<p>test size is fixed at 512MBytes</p>
+<p>test size is fixed at 256MBytes</p>
 </li>
 </ul>
 </div>
@@ -607,7 +607,7 @@ C:\work\tyto_project&gt; xbuild.bat ddr3_test nexys_video 8</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-07-24 15:34:02 +0100
+Last updated 2021-07-24 20:56:55 +0100
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/github.min.css">

@@ -32,7 +32,7 @@ Supports: Digilent Nexys Video, QMTECH Wukong
 
 === ddr3_test
 
-A simple DDR3 SDRAM tester based on https://github.com/jorisvr/vhdl_prng[Joris van Rantwijk's Pseudo Random Number Generator]. Also demonstrates the addition of user defined clocks, including the 200MHz IODELAYCTRL reference clock, to the DDR3 IP core MMCM in a VHDL flow.
+A simple DDR3 SDRAM tester based on https://github.com/jorisvr/vhdl_prng[Joris van Rantwijk's Pseudo Random Number Generator]. Also demonstrates the addition of user defined clocks, including the 200MHz IODELAYCTRL reference clock, to the DDR3 IP core MMCM. <<./doc/ddr3_test/ddr3_test.adoc#,More...>> 
 
 Supports: Digilent Nexys Video
 

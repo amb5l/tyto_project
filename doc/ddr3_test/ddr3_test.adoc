@@ -24,7 +24,7 @@ After the build process has completed, the Vivado project may be opened in the V
 
 == Programming Procedure
 
-First, ensure that the FPGA board is correctly connected to the host PC and the display monitor as follows:
+First, ensure that the FPGA board is correctly connected to the host PC as follows:
 
 Digilent Nexys Video:: Connect the *PROG* port to the host PC.
 
@@ -42,9 +42,9 @@ Test control and status indication depends on the board being used:
 
 Digilent Nexys Video::
 * SW4-0 sets the test size in bytes as a power of 2:
-** 00100 = 4: 2**4 = 16 Bytes (minimum)
-** 01000 = 8: 2**8 = 256 Bytes
-** 11101 = 29: 2**29 = 512MBytes (maximum)
+** 00100 = 4: 2^4 = 16 Bytes (minimum)
+** 01000 = 8: 2^8 = 256 Bytes
+** 11101 = 29: 2^29 = 512MBytes (maximum)
 ** OFF = 0, ON = 1 
 * SW5 enables slow testing (once per second) when ON
 * SW6 is a run/stop control (ON = run)
@@ -58,7 +58,7 @@ Note that changing the test size during a test can cause an error. Press the CPU
 QMTECH Wukong::
 * D5 = heartbeat (toggles every time round the test)
 * D6 = at least one error has occurred
-* test size is fixed at 512MBytes
+* test size is fixed at 256MBytes
 
 ++++
 <style>
