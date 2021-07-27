@@ -6,12 +6,6 @@ set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets {clki_50m_IBUF}]
 create_generated_clock -name clk_x2 [get_pins CLOCK/MMCM/CLKOUT0] 
 create_generated_clock -name clk_x1 [get_pins CLOCK/MMCM/CLKOUT1]
 
-# RAM placement for XC7A100
-set_property LOC RAMB36_X1Y12 [get_cells {SYS/CORE/RAM/GEN_RAM[0].RAM/GEN[0].RAM}]
-set_property LOC RAMB36_X1Y20 [get_cells {SYS/CORE/RAM/GEN_RAM[1].RAM/GEN[0].RAM}]
-set_property LOC RAMB36_X2Y12 [get_cells {SYS/CORE/RAM/GEN_RAM[2].RAM/GEN[0].RAM}]
-set_property LOC RAMB36_X2Y20 [get_cells {SYS/CORE/RAM/GEN_RAM[3].RAM/GEN[0].RAM}]
-
 # physical constraints
 set_property -dict { PACKAGE_PIN M22 IOSTANDARD LVCMOS33 }              [get_ports { clki_50m }];           # net SYS_CLK
 set_property -dict { PACKAGE_PIN J6 IOSTANDARD LVCMOS33 }               [get_ports { led_n[0] }];           # D5, net LED0

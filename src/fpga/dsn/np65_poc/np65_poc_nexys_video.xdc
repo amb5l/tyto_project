@@ -5,12 +5,6 @@ create_clock -add -name clki_100m -period 10 [get_ports clki_100m] ; # 100MHz
 create_generated_clock -name clk_x2 [get_pins CLOCK/MMCM/CLKOUT0] 
 create_generated_clock -name clk_x1 [get_pins CLOCK/MMCM/CLKOUT1]
 
-# RAM placement for XC7A200
-set_property LOC RAMB36_X0Y11 [get_cells {SYS/CORE/RAM/GEN_RAM[0].RAM/GEN[0].RAM}]
-set_property LOC RAMB36_X1Y11 [get_cells {SYS/CORE/RAM/GEN_RAM[1].RAM/GEN[0].RAM}]
-set_property LOC RAMB36_X2Y11 [get_cells {SYS/CORE/RAM/GEN_RAM[2].RAM/GEN[0].RAM}]
-set_property LOC RAMB36_X3Y11 [get_cells {SYS/CORE/RAM/GEN_RAM[3].RAM/GEN[0].RAM}]
-
 # physical constraints
 set_property -dict { PACKAGE_PIN R4 IOSTANDARD LVCMOS33 } [get_ports { clki_100m }];
 # set_property -dict { PACKAGE_PIN E6 } [get_ports { gtp_clk_n }];

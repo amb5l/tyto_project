@@ -49,43 +49,52 @@ end entity np65_ram_bank;
 
 architecture struct of np65_ram_bank is
 
-    signal doado : slv_15_0_t(0 to 7);
-    signal dobdo : slv_15_0_t(0 to 7);
+    signal doado        : slv_31_0_t(0 to 3);
+    signal dobdo        : slv_31_0_t(0 to 3);
+    signal diadi        : slv_31_0_t(0 to 3);
+    signal dibdi        : slv_31_0_t(0 to 3);
 
     attribute U_SET : string;
     attribute RLOC : string;
 
 begin
 
-    GEN: for i in 0 to 7 generate
+    GEN: for i in 0 to 3 generate
 
         attribute U_SET of RAM : label is rpm_name;
         attribute RLOC of RAM : label is "X0Y" & integer'image(i);
 
     begin
 
-        RAM : RAMB18E1
+        diadi(i) <= (1 downto 0 => din_a(1+(2*i) downto 2*i), others => '0');
+        dibdi(i) <= (1 downto 0 => din_b(1+(2*i) downto 2*i), others => '0');
+
+        RAM : RAMB36E1
             generic map (
-                RDADDR_COLLISION_HWCONFIG => "DELAYED_WRITE", -- Address Collision Mode: "PERFORMANCE" or "DELAYED_WRITE"
-                SIM_COLLISION_CHECK => "ALL",                 -- Collision check: Values ("ALL", "WARNING_ONLY", "GENERATE_X_ONLY" or "NONE")
-                DOA_REG => 0,                                 -- optional output register (0 or 1)
-                DOB_REG => 0,                                 -- optional output register (0 or 1)
-                INIT_A => X"00000",                           -- initial values on output port A
-                INIT_B => X"00000",                           -- initial values on output port B
-                INIT_FILE => "NONE",                          -- Initialization File: RAM initialization file
-                RAM_MODE => "TDP",                            -- RAM Mode: "SDP" or "TDP"
-                READ_WIDTH_A => 1,                            -- port width, 0-72
-                READ_WIDTH_B => 1,                            -- port width, 0-36
-                WRITE_WIDTH_A => 1,                           -- port width, 0-36
-                WRITE_WIDTH_B => 1,                           -- port width, 0-72
-                RSTREG_PRIORITY_A => "RSTREG",                -- port A reset or enable priority ("RSTREG" or "REGCE")
-                RSTREG_PRIORITY_B => "RSTREG",                -- port B reset or enable priority ("RSTREG" or "REGCE")
-                SRVAL_A => X"00000",                          -- set/reset value for output
-                SRVAL_B => X"00000",                          -- set/reset value for output
-                SIM_DEVICE => "7SERIES",                      -- must be set to "7SERIES" for simulation behavior
-                WRITE_MODE_A => "READ_FIRST",                 -- value on read port A upon a write ("WRITE_FIRST", "READ_FIRST", or "NO_CHANGE")
-                WRITE_MODE_B => "READ_FIRST",                 -- value on read port A upon a write ("WRITE_FIRST", "READ_FIRST", or "NO_CHANGE")
-                INIT_00 => init(i)(0),                        -- INIT_00 to INIT_3F: Initial contents of the data memory array (64 x hex digits)
+                RDADDR_COLLISION_HWCONFIG => "DELAYED_WRITE",   -- Address Collision Mode: "PERFORMANCE" or "DELAYED_WRITE"
+                SIM_COLLISION_CHECK => "ALL",                   -- Collision check: Values ("ALL", "WARNING_ONLY", "GENERATE_X_ONLY" or "NONE")
+                DOA_REG => 0,                                   -- optional output register (0 or 1)
+                DOB_REG => 0,                                   -- optional output register (0 or 1)
+                EN_ECC_READ => FALSE,                           -- Enable ECC decoder (FALSE, TRUE)
+                EN_ECC_WRITE => FALSE,                          -- Enable ECC encoder (FALSE, TRUE)
+                INIT_A => X"000000000",                         -- initial values on output port A
+                INIT_B => X"000000000",                         -- initial values on output port B
+                INIT_FILE => "NONE",                            -- Initialization File: RAM initialization file
+                RAM_MODE => "TDP",                              -- RAM Mode: "SDP" or "TDP"
+                RAM_EXTENSION_A => "NONE",                      -- cascade mode ("UPPER", "LOWER", or "NONE")
+                RAM_EXTENSION_B => "NONE",                      -- cascade mode ("UPPER", "LOWER", or "NONE")
+                READ_WIDTH_A => 2,                              -- port width, 0-72
+                READ_WIDTH_B => 2,                              -- port width, 0-36
+                WRITE_WIDTH_A => 2,                             -- port width, 0-36
+                WRITE_WIDTH_B => 2,                             -- port width, 0-72
+                RSTREG_PRIORITY_A => "RSTREG",                  -- port A reset or enable priority ("RSTREG" or "REGCE")
+                RSTREG_PRIORITY_B => "RSTREG",                  -- port B reset or enable priority ("RSTREG" or "REGCE")
+                SRVAL_A => X"000000000",                        -- set/reset value for output
+                SRVAL_B => X"000000000",                        -- set/reset value for output
+                SIM_DEVICE => "7SERIES",                        -- must be set to "7SERIES" for simulation behavior
+                WRITE_MODE_A => "READ_FIRST",                   -- value on read port A upon a write ("WRITE_FIRST", "READ_FIRST", or "NO_CHANGE")
+                WRITE_MODE_B => "READ_FIRST",                   -- value on read port A upon a write ("WRITE_FIRST", "READ_FIRST", or "NO_CHANGE")
+                INIT_00 => init(i)(0),                          -- INIT_00 to INIT_7F: Initial contents of the data memory array (64 x hex digits)
                 INIT_01 => init(i)(1),
                 INIT_02 => init(i)(2),
                 INIT_03 => init(i)(3),
@@ -148,41 +157,110 @@ begin
                 INIT_3C => init(i)(60),
                 INIT_3D => init(i)(61),
                 INIT_3E => init(i)(62),
-                INIT_3F => init(i)(63)
-                -- INITP_00 to INITP_07: Initial contents of the parity memory array (64 x hex digits)
-                -- INIT_00 to INIT_3F: Initial contents of the data memory array (64 x hex digits)
+                INIT_3F => init(i)(63),
+                INIT_40 => init(i)(64),
+                INIT_41 => init(i)(65),
+                INIT_42 => init(i)(66),
+                INIT_43 => init(i)(67),
+                INIT_44 => init(i)(68),
+                INIT_45 => init(i)(69),
+                INIT_46 => init(i)(70),
+                INIT_47 => init(i)(71),
+                INIT_48 => init(i)(72),
+                INIT_49 => init(i)(73),
+                INIT_4A => init(i)(74),
+                INIT_4B => init(i)(75),
+                INIT_4C => init(i)(76),
+                INIT_4D => init(i)(77),
+                INIT_4E => init(i)(78),
+                INIT_4F => init(i)(79),
+                INIT_50 => init(i)(80),
+                INIT_51 => init(i)(81),
+                INIT_52 => init(i)(82),
+                INIT_53 => init(i)(83),
+                INIT_54 => init(i)(84),
+                INIT_55 => init(i)(85),
+                INIT_56 => init(i)(86),
+                INIT_57 => init(i)(87),
+                INIT_58 => init(i)(88),
+                INIT_59 => init(i)(89),
+                INIT_5A => init(i)(90),
+                INIT_5B => init(i)(91),
+                INIT_5C => init(i)(92),
+                INIT_5D => init(i)(93),
+                INIT_5E => init(i)(94),
+                INIT_5F => init(i)(95),
+                INIT_60 => init(i)(96),
+                INIT_61 => init(i)(97),
+                INIT_62 => init(i)(98),
+                INIT_63 => init(i)(99),
+                INIT_64 => init(i)(100),
+                INIT_65 => init(i)(101),
+                INIT_66 => init(i)(102),
+                INIT_67 => init(i)(103),
+                INIT_68 => init(i)(104),
+                INIT_69 => init(i)(105),
+                INIT_6A => init(i)(106),
+                INIT_6B => init(i)(107),
+                INIT_6C => init(i)(108),
+                INIT_6D => init(i)(109),
+                INIT_6E => init(i)(110),
+                INIT_6F => init(i)(111),
+                INIT_70 => init(i)(112),
+                INIT_71 => init(i)(113),
+                INIT_72 => init(i)(114),
+                INIT_73 => init(i)(115),
+                INIT_74 => init(i)(116),
+                INIT_75 => init(i)(117),
+                INIT_76 => init(i)(118),
+                INIT_77 => init(i)(119),
+                INIT_78 => init(i)(120),
+                INIT_79 => init(i)(121),
+                INIT_7A => init(i)(122),
+                INIT_7B => init(i)(123),
+                INIT_7C => init(i)(124),
+                INIT_7D => init(i)(125),
+                INIT_7E => init(i)(126),
+                INIT_7F => init(i)(127)
+                -- INITP_00 to INITP_0F: Initial contents of the parity memory array (64 x hex digits)
             )
             port map (
-                DOADO => doado(i),                     -- 16-bit output: A port data/LSB data
-                DOPADOP => open,                       -- 2-bit output: A port parity/LSB parity
-                DOBDO => dobdo(i),                     -- 16-bit output: B port data/MSB data
-                DOPBDOP => open,                       -- 2-bit output: B port parity/MSB parity
-                ADDRARDADDR => addr_a,                 -- 14-bit input: A port address/Read address
-                CLKARDCLK => clk,                      -- 1-bit input: A port clock/Read clock
-                ENARDEN => ce_a,                       -- 1-bit input: A port enable/Read enable
-                REGCEAREGCE => '1',                    -- 1-bit input: A port register enable/Register enable
+                CASCADEOUTA => open,        -- 1 bit output: A port cascade (to create 64kx1)
+                CASCADEOUTB => open,        -- 1 bit output: B port cascade (to create 64kx1)
+                DBITERR => open,            -- 1 bit output: ECC - double bit error status
+                ECCPARITY => open,          -- 8-bit output: Generated error correction parity
+                RDADDRECC => open,          -- 9-bit output: ECC read address
+                SBITERR => open,            -- 1-bit output: Single bit error status
+                DOADO => doado(i),          -- 32-bit output: A port data/LSB data
+                DOPADOP => open,            -- 4-bit output: A port parity/LSB parity
+                DOBDO => dobdo(i),          -- 32-bit output: B port data/MSB data
+                DOPBDOP => open,            -- 4-bit output: B port parity/MSB parity
+                CASCADEINA => '0',          -- 1-bit input: A port cascade
+                CASCADEINB => '0',          -- 1-bit input: B port cascade
+                INJECTDBITERR => '0',       -- 1-bit input: Inject a double bit error
+                INJECTSBITERR => '0',       -- 1-bit input: Inject a single bit error
+                ADDRARDADDR => '0' & addr_a & '0',-- 16-bit input: A port address/Read address
+                CLKARDCLK => clk,           -- 1-bit input: A port clock/Read clock
+                ENARDEN => ce_a,            -- 1-bit input: A port enable/Read enable
+                REGCEAREGCE => '1',         -- 1-bit input: A port register enable/Register enable
                 RSTRAMARSTRAM => clr_a,     -- 1-bit input: A port set/reset
-                RSTREGARSTREG => '0',                  -- 1-bit input: A port register set/reset
-                WEA(0) => we_a,                        -- 2-bit input: A port write enable
-                WEA(1) => '0',
-                DIADI(0) => din_a(i),                  -- 16-bit input: A port data/LSB data
-                DIADI(15 downto 1) => (others => '0'),
-                DIPADIP => "00",                       -- 2-bit input: A port parity/LSB parity
-                ADDRBWRADDR => addr_b,                 -- 14-bit input: B port address/Write address
-                CLKBWRCLK => clk,                      -- 1-bit input: B port clock/Write clock
-                ENBWREN => ce_b,                       -- 1-bit input: B port enable/Write enable
-                REGCEB => '1',                         -- 1-bit input: B port register enable
-                RSTRAMB => clr_b,                      -- 1-bit input: B port set/reset
-                RSTREGB => '0',                        -- 1-bit input: B port register set/reset
-                WEBWE(0) => we_b,                      -- 4-bit input: B port write enable/Write enable
-                WEBWE(3 downto 1) => "000",
-                DIBDI(0) => din_b(i),                  -- 16-bit input: B port data/MSB data
-                DIBDI(15 downto 1) => (others => '0'),
-                DIPBDIP => "00"                        -- 2-bit input: B port parity/MSB parity
+                RSTREGARSTREG => '0',       -- 1-bit input: A port register set/reset
+                WEA => "000" & we_a,        -- 4-bit input: A port write enable
+                DIADI => diadi(i),          -- 32-bit input: A port data/LSB data
+                DIPADIP => "0000",          -- 4-bit input: A port parity/LSB parity
+                ADDRBWRADDR => '0' & addr_b & '0',-- 16-bit input: B port address/Write address
+                CLKBWRCLK => clk,           -- 1-bit input: B port clock/Write clock
+                ENBWREN => ce_b,            -- 1-bit input: B port enable/Write enable
+                REGCEB => '1',              -- 1-bit input: B port register enable
+                RSTRAMB => clr_b,           -- 1-bit input: B port set/reset
+                RSTREGB => '0',             -- 1-bit input: B port register set/reset
+                WEBWE => "0000000" & we_b,  -- 8-bit input: B port write enable/Write enable
+                DIBDI => dibdi(i)   ,       -- 32-bit input: B port data/MSB data
+                DIPBDIP => "0000"           -- 4-bit input: B port parity/MSB parity
             );
 
-        dout_a(i) <= doado(i)(0);
-        dout_b(i) <= dobdo(i)(0);
+        dout_a(1+(2*i) downto 2*i) <= doado(i)(1 downto 0);
+        dout_b(1+(2*i) downto 2*i) <= dobdo(i)(1 downto 0);
 
     end generate GEN;
 

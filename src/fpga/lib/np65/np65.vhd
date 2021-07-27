@@ -1005,10 +1005,10 @@ begin
                     vector_irq(15 downto 8) <= vector_dw;
                 end if;
             end if;
-        end if;
-        if rst = '1' then
-            vector_nmi <= (others => '0');
-            vector_irq <= (others => '0');
+            if rst = '1' then
+                vector_nmi <= (others => '0');
+                vector_irq <= (others => '0');
+            end if;
         end if;
     end process;
 

@@ -18,8 +18,13 @@
 
 import sys, math
 
+# constants
 banks = 4 # might be 8 one day
+bank_width = 8 # banks are byte wide
+bram_capacity = 32768 # effective capacity (bits) of RAMB36
 init_vector_size = 256 # BRAM init vector size
+vectors_per_bram = int(bram_capacity/init_vector_size)
+name = 'ram_init'
 
 if len(sys.argv) < 2:
     print('usage: np65_ram_pkg.py <ram size> [<address> <file>] [outpath]')
@@ -35,6 +40,9 @@ if ram_size != 64 and ram_size != 128 and ram_size != 256:
     print('supported RAM sizes: 64, 128 or 256')
     sys.exit(1)
 print('RAM size = '+str(ram_size)+' kbytes')
+brams_per_bank = (bank_width * ram_size * 1024) / (banks * bram_capacity )
+brams_per_bank_bit = brams_per_bank/bank_width # 256k => 2, 128k => 1, 64k => 0.5
+bank_bits_per_bram = 1/brams_per_bank_bit # 256k => 0.5, 128k => 1, 64k => 2
 
 contents = []
 i = 2
@@ -60,11 +68,9 @@ if vector_prereset >= 2**16:
     print('init vector outside bottom 64k')
     sys.exit(1)
 
-name = 'ram_init'
 data = [0x00] * (ram_size * 1024)
 
 # load binary file(s)
-
 print('loading...')
 for addr, filename in contents:
     print('  %s -> 0x%05X...' % (filename, addr))
@@ -78,17 +84,6 @@ for addr, filename in contents:
     f.close()
 
 # write VHDL
-
-if ram_size == 64:
-    bram_size = 16384
-else:
-    bram_size = 32768
-vectors_per_bram = int(bram_size/init_vector_size)
-if ram_size == 256:
-    brams_per_bit = 2
-else:
-    brams_per_bit = 1
-
 f = open(output_path+'np65_ram_'+str(ram_size)+'k'+'_pkg.vhd', 'w')
 f.write('--------------------------------------------------------------------------------\n')
 f.write('-- np65_ram_'+str(ram_size)+'k'+'_pkg.vhd\n')
@@ -110,31 +105,40 @@ f.write('  constant ram_size : integer := '+str(ram_size)+';\n')
 f.write('  constant apmsb : integer := '+str(9+int(math.log(ram_size,2)))+';\n')
 f.write('  constant vector_prereset : std_logic_vector(15 downto 0) := x"%04X";\n' % vector_prereset)
 f.write('\n')
-f.write('  type '+name+'_prim_t is array(0 to '+str(vectors_per_bram-1)+') of bit_vector(255 downto 0); -- individual BRAM ('+str(bram_size)+' bits)\n')
-if brams_per_bit == 2:
-    f.write('  type '+name+'_pair_t is array(0 to 1) of '+name+'_prim_t; -- BRAM pair ('+str(2*bram_size)+' bits)\n')
+f.write('  type '+name+'_prim_t is array(0 to '+str(vectors_per_bram-1)+') of bit_vector(255 downto 0); -- individual BRAM ('+str(bram_capacity)+' bits)\n')
+if brams_per_bank_bit == 2:
+    f.write('  type '+name+'_pair_t is array(0 to 1) of '+name+'_prim_t; -- BRAM pair ('+str(2*bram_capacity)+' bits)\n')
     f.write('  type '+name+'_bank_t is array(0 to 7) of '+name+'_pair_t; -- 8 bit bank = 8 BRAM pairs per bank\n')
-else:
+elif brams_per_bank_bit == 1:
     f.write('  type '+name+'_bank_t is array(0 to 7) of '+name+'_prim_t; -- 8 bit bank = 8 BRAMs per bank\n')
+else:
+    f.write('  type '+name+'_bank_t is array(0 to 3) of '+name+'_prim_t; -- 8 bit bank = 4 BRAMs per bank\n')
 f.write('  type '+name+'_t is array(0 to 3) of '+name+'_bank_t; -- 4 banks\n')
 f.write('\n')
 f.write('  constant '+name+' : '+name+'_t :=\n')
 f.write('    ( -- %d banks...\n' % banks)
 for bank in range(banks):
-    f.write('      ( -- 8 bits per bank...\n')
-    for bank_bit in range(8):
-        if brams_per_bit == 2:
+    f.write('      ( -- %d bits = %d BRAMs per bank...\n' % (bank_width, brams_per_bank))
+    print("********", bank_width, int(bank_bits_per_bram+0.5))
+    for bank_bit in range(0, bank_width, int(bank_bits_per_bram+0.5)):
+        if brams_per_bank_bit == 2:
             f.write('        ( -- pair of BRAMs (lower and upper)...\n')
             indent = '  '
         else:
             indent = ''
-        for bit_bram in range(brams_per_bit):
+        for bit_bram in range(int(brams_per_bank_bit+0.5)):
             f.write(indent+'        ( -- %d vectors per BRAM...\n' % vectors_per_bram)
             for init_vector in range(vectors_per_bram):
                 v = [0] * init_vector_size
-                for v_bit in range(init_vector_size):
-                    i = bank + (banks * (v_bit + (init_vector * init_vector_size) + (bit_bram * bram_size)))
-                    v[v_bit] = (data[i] >> bank_bit) & 1
+                for v_bit in range(0, init_vector_size, int(bank_bits_per_bram+0.5)):
+                    if bank_bits_per_bram == 2:
+                        i = bank + int((banks * (v_bit + (init_vector * init_vector_size)))/2)
+                        print(bank, v_bit, bit_bram, i)
+                        v[v_bit] = (data[i] >> bank_bit) & 1
+                        v[1+v_bit] = (data[i] >> (1+bank_bit)) & 1
+                    else:
+                        i = bank + (banks * (v_bit + (init_vector * init_vector_size) + (bit_bram * bram_capacity)))
+                        v[v_bit] = (data[i] >> bank_bit) & 1
                 f.write(indent+'          x"')
                 for i in range(32):
                     b = 0
@@ -147,15 +151,15 @@ for bank in range(banks):
                 else:
                     f.write(', ')
                 f.write(' -- INIT_%0.2X, ' % init_vector)
-                if brams_per_bit == 2:
+                if brams_per_bank_bit == 2:
                     f.write('LOWER, ' if bit_bram == 0 else 'UPPER, ')
                 f.write('bit %d, ' % bank_bit)
                 f.write('bank %d\n' % bank)
-            if brams_per_bit == 2:
+            if brams_per_bank_bit == 2:
                 f.write(indent+'        )')
-                f.write('\n' if bit_bram == brams_per_bit-1 else ',\n')
+                f.write('\n' if bit_bram == brams_per_bank_bit-1 else ',\n')
         f.write('        )')
-        f.write('\n' if bank_bit == 7 else ',\n')
+        f.write('\n' if bank_bit + int(bank_bits_per_bram-0.5) == 7 else ',\n')
     f.write('      )')
     f.write('\n' if bank == banks-1 else ',\n')
 f.write('    );\n')

@@ -51,6 +51,8 @@ architecture struct of np65_ram_bank is
 
     signal doado        : slv_31_0_t(0 to 7);
     signal dobdo        : slv_31_0_t(0 to 7);
+    signal diadi        : slv_31_0_t(0 to 7);
+    signal dibdi        : slv_31_0_t(0 to 7);
     signal cascade_a    : std_logic_vector(0 to 7);
     signal cascade_b    : std_logic_vector(0 to 7);
 
@@ -67,6 +69,9 @@ begin
         attribute RLOC of RAM1 : label is "X0Y" & integer'image(1+(i*2));
 
     begin
+
+        diadi(i) <= (0 => din_a(i), others => '0');
+        dibdi(i) <= (0 => din_b(i), others => '0');
 
         RAM1 : RAMB36E1 -- upper
             generic map (
@@ -244,10 +249,8 @@ begin
                 REGCEAREGCE => '1',         -- 1-bit input: A port register enable/Register enable
                 RSTRAMARSTRAM => clr_a,     -- 1-bit input: A port set/reset
                 RSTREGARSTREG => '0',       -- 1-bit input: A port register set/reset
-                WEA(0) => we_a,             -- 4-bit input: A port write enable
-                WEA(3 downto 1) => (others => '0'),
-                DIADI(0) => din_a(i),       -- 32-bit input: A port data/LSB data
-                DIADI(31 downto 1) => (others => '0'),
+                WEA => "000" & we_a,        -- 4-bit input: A port write enable
+                DIADI => diadi(i),          -- 32-bit input: A port data/LSB data
                 DIPADIP => "0000",          -- 4-bit input: A port parity/LSB parity
                 ADDRBWRADDR => addr_b,      -- 16-bit input: B port address/Write address
                 CLKBWRCLK => clk,           -- 1-bit input: B port clock/Write clock
@@ -255,10 +258,8 @@ begin
                 REGCEB => '1',              -- 1-bit input: B port register enable
                 RSTRAMB => clr_b,           -- 1-bit input: B port set/reset
                 RSTREGB => '0',             -- 1-bit input: B port register set/reset
-                WEBWE(0) => we_b,           -- 8-bit input: B port write enable/Write enable
-                WEBWE(7 downto 1) => (others => '0'),
-                DIBDI(0) => din_b(i),       -- 32-bit input: B port data/MSB data
-                DIBDI(31 downto 1) => (others => '0'),
+                WEBWE => "0000000" & we_b,  -- 8-bit input: B port write enable/Write enable
+                DIBDI => dibdi(i)   ,       -- 32-bit input: B port data/MSB data
                 DIPBDIP => "0000"           -- 4-bit input: B port parity/MSB parity
             );
 
@@ -438,10 +439,8 @@ begin
                 REGCEAREGCE => '1',         -- 1-bit input: A port register enable/Register enable
                 RSTRAMARSTRAM => clr_a,     -- 1-bit input: A port set/reset
                 RSTREGARSTREG => '0',       -- 1-bit input: A port register set/reset
-                WEA(0) => we_a,             -- 4-bit input: A port write enable
-                WEA(3 downto 1) => (others => '0'),
-                DIADI(0) => din_a(i),       -- 32-bit input: A port data/LSB data
-                DIADI(31 downto 1) => (others => '0'),
+                WEA => "000" & we_a,        -- 4-bit input: A port write enable
+                DIADI => diadi(i),          -- 32-bit input: A port data/LSB data
                 DIPADIP => "0000",          -- 4-bit input: A port parity/LSB parity
                 ADDRBWRADDR => addr_b,      -- 16-bit input: B port address/Write address
                 CLKBWRCLK => clk,           -- 1-bit input: B port clock/Write clock
@@ -449,10 +448,8 @@ begin
                 REGCEB => '1',              -- 1-bit input: B port register enable
                 RSTRAMB => clr_b,           -- 1-bit input: B port set/reset
                 RSTREGB => '0',             -- 1-bit input: B port register set/reset
-                WEBWE(0) => we_b,           -- 8-bit input: B port write enable/Write enable
-                WEBWE(7 downto 1) => (others => '0'),
-                DIBDI(0) => din_b(i),       -- 32-bit input: B port data/MSB data
-                DIBDI(31 downto 1) => (others => '0'),
+                WEBWE => "0000000" & we_b,  -- 8-bit input: B port write enable/Write enable
+                DIBDI => dibdi(i)   ,       -- 32-bit input: B port data/MSB data
                 DIPBDIP => "0000"           -- 4-bit input: B port parity/MSB parity
             );
 

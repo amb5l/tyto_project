@@ -51,6 +51,8 @@ architecture struct of np65_ram_bank is
 
     signal doado        : slv_31_0_t(0 to 7);
     signal dobdo        : slv_31_0_t(0 to 7);
+    signal diadi        : slv_31_0_t(0 to 7);
+    signal dibdi        : slv_31_0_t(0 to 7);
 
     attribute U_SET : string;
     attribute RLOC : string;
@@ -63,6 +65,9 @@ begin
         attribute RLOC of RAM : label is "X0Y" & integer'image(i);
 
     begin
+
+        diadi(i) <= (0 => din_a(i), others => '0');
+        dibdi(i) <= (0 => din_b(i), others => '0');
 
         RAM : RAMB36E1
             generic map (
@@ -218,7 +223,6 @@ begin
                 INIT_7E => init(i)(126),
                 INIT_7F => init(i)(127)
                 -- INITP_00 to INITP_0F: Initial contents of the parity memory array (64 x hex digits)
-                -- INIT_00 to INIT_7F: Initial contents of the data memory array (64 x hex digits)
             )
             port map (
                 CASCADEOUTA => open,        -- 1 bit output: A port cascade (to create 64kx1)
@@ -235,29 +239,23 @@ begin
                 CASCADEINB => '0',          -- 1-bit input: B port cascade
                 INJECTDBITERR => '0',       -- 1-bit input: Inject a double bit error
                 INJECTSBITERR => '0',       -- 1-bit input: Inject a single bit error
-                ADDRARDADDR(14 downto 0) => addr_a, -- 16-bit input: A port address/Read address
-                ADDRARDADDR(15) => '1',
+                ADDRARDADDR => '1' & addr_a,-- 16-bit input: A port address/Read address
                 CLKARDCLK => clk,           -- 1-bit input: A port clock/Read clock
                 ENARDEN => ce_a,            -- 1-bit input: A port enable/Read enable
                 REGCEAREGCE => '1',         -- 1-bit input: A port register enable/Register enable
                 RSTRAMARSTRAM => clr_a,     -- 1-bit input: A port set/reset
                 RSTREGARSTREG => '0',       -- 1-bit input: A port register set/reset
-                WEA(0) => we_a,             -- 4-bit input: A port write enable
-                WEA(3 downto 1) => (others => '0'),
-                DIADI(0) => din_a(i),       -- 32-bit input: A port data/LSB data
-                DIADI(31 downto 1) => (others => '0'),
+                WEA => "000" & we_a,        -- 4-bit input: A port write enable
+                DIADI => diadi(i),          -- 32-bit input: A port data/LSB data
                 DIPADIP => "0000",          -- 4-bit input: A port parity/LSB parity
-                ADDRBWRADDR(14 downto 0) => addr_b, -- 16-bit input: B port address/Write address
-                ADDRBWRADDR(15) => '1',
+                ADDRBWRADDR => '1' & addr_b,-- 16-bit input: B port address/Write address
                 CLKBWRCLK => clk,           -- 1-bit input: B port clock/Write clock
                 ENBWREN => ce_b,            -- 1-bit input: B port enable/Write enable
                 REGCEB => '1',              -- 1-bit input: B port register enable
                 RSTRAMB => clr_b,           -- 1-bit input: B port set/reset
                 RSTREGB => '0',             -- 1-bit input: B port register set/reset
-                WEBWE(0) => we_b,           -- 8-bit input: B port write enable/Write enable
-                WEBWE(7 downto 1) => (others => '0'),
-                DIBDI(0) => din_b(i),       -- 32-bit input: B port data/MSB data
-                DIBDI(31 downto 1) => (others => '0'),
+                WEBWE => "0000000" & we_b,  -- 8-bit input: B port write enable/Write enable
+                DIBDI => dibdi(i)   ,       -- 32-bit input: B port data/MSB data
                 DIPBDIP => "0000"           -- 4-bit input: B port parity/MSB parity
             );
 
