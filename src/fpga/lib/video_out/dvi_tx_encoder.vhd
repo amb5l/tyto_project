@@ -17,6 +17,26 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+
+package dvi_tx_encoder_pkg is
+
+    component dvi_tx_encoder is
+        port (
+            rst     : in    std_logic;                      -- synchronous reset
+            clk     : in    std_logic;                      -- pixel clock
+            de      : in    std_logic;                      -- pixel data enable
+            d       : in    std_logic_vector(7 downto 0);   -- pixel data
+            c       : in    std_logic_vector(1 downto 0);   -- control
+            q       : out   std_logic_vector(9 downto 0)    -- TMDS encoded output
+        );
+    end component dvi_tx_encoder;
+
+end package dvi_tx_encoder_pkg;
+    
+-------------------------------------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity dvi_tx_encoder is

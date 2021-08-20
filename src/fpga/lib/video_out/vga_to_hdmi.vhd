@@ -17,6 +17,56 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+
+library work;
+use work.types_pkg.all;
+
+package vga_to_hdmi_pkg is
+
+    component vga_to_hdmi is
+        generic (
+
+            pcm_fs      : real                                 -- audio sample rate (kHz) e.g. 48.0
+
+        );
+        port (
+
+            dvi         : in    std_logic;                     -- DVI mode disables all HDMI enhancements e.g. audio
+            vic         : in    std_logic_vector(7 downto 0);  -- CEA/CTA VIC
+            aspect      : in    std_logic_vector(1 downto 0);  -- for aspect ratio signalling in AVI InfoFrames
+            pix_rep     : in    std_logic;                     -- signals pixel repetition (SD interlaced modes)
+            vs_pol      : in    std_logic;                     -- vertical sync output polarity   } 1 = active high
+            hs_pol      : in    std_logic;                     -- horizontal sync output polarity } 
+
+            vga_rst     : in    std_logic;                     -- reset
+            vga_clk     : in    std_logic;                     -- pixel clock
+            vga_vs      : in    std_logic;                     -- vertical sync   } active high
+            vga_hs      : in    std_logic;                     -- horizontal sync }
+            vga_de      : in    std_logic;                     -- data (pixel) enable
+            vga_r       : in    std_logic_vector(7 downto 0);  -- pixel data, red channel   }
+            vga_g       : in    std_logic_vector(7 downto 0);  -- pixel data, green channel } 0..255
+            vga_b       : in    std_logic_vector(7 downto 0);  -- pixel data, blue channel  }
+
+            pcm_rst     : in    std_logic;                     -- audio reset
+            pcm_clk     : in    std_logic;                     -- audio clock        } combined = fs
+            pcm_clken   : in    std_logic;                     -- audio clock enable }  (audio sample rate)
+            pcm_l       : in    std_logic_vector(15 downto 0); -- left channel  } audio
+            pcm_r       : in    std_logic_vector(15 downto 0); -- right channel }  sample
+            pcm_acr     : in    std_logic;                     -- HDMI ACR packet strobe (frequency = 128fs/N e.g. 1kHz)
+            pcm_n       : in    std_logic_vector(19 downto 0); -- HDMI ACR N value
+            pcm_cts     : in    std_logic_vector(19 downto 0); -- HDMI ACR CTS value
+
+            tmds        : out   slv_9_0_t(0 to 2)              -- parallel TMDS symbol stream x 3 channels 
+
+        );
+    end component vga_to_hdmi;
+
+end package vga_to_hdmi_pkg;
+
+----------------------------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library xpm;

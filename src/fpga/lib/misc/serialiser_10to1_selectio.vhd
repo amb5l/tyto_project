@@ -17,6 +17,26 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+
+package serialiser_10to1_selectio_pkg is
+
+    component serialiser_10to1_selectio is
+        port (
+            rst     : in    std_logic;                      -- reset
+            clk     : in    std_logic;                      -- parallel data clcok
+            clk_x5  : in    std_logic;                      -- serialiser DDR clock
+            d       : in    std_logic_vector(9 downto 0);   -- input parallel data
+            out_p   : out   std_logic;                      -- output serial data
+            out_n   : out   std_logic                       -- "
+        );
+    end component serialiser_10to1_selectio;
+
+end package serialiser_10to1_selectio_pkg;
+
+----------------------------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library unisim;

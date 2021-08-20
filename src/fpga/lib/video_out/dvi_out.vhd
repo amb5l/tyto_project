@@ -18,6 +18,62 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
+package dvi_out_pkg is
+
+    component dvi_out is
+        port (
+
+            rst         : in    std_logic;                      -- reset
+            clk         : in    std_logic;                      -- pixel clock
+            clk_x5      : in    std_logic;                      -- serialiser clock
+
+            mode_pixrep : in    std_logic;                      -- 1 = pixel doubling/repetition
+            mode_ilace  : in    std_logic;                      -- interlaced/progressive scan
+            mode_v_tot  : in    std_logic_vector(10 downto 0);  -- vertical total lines (must be odd if interlaced)
+            mode_v_act  : in    std_logic_vector(10 downto 0);  -- vertical active lines
+            mode_v_sync : in    std_logic_vector(2 downto 0);   -- vertical sync width
+            mode_v_bp   : in    std_logic_vector(5 downto 0);   -- vertical back porch
+            mode_h_tot  : in    std_logic_vector(11 downto 0);  -- horizontal total
+            mode_h_act  : in    std_logic_vector(10 downto 0);  -- horizontal active
+            mode_h_sync : in    std_logic_vector(6 downto 0);   -- horizontal sync width
+            mode_h_bp   : in    std_logic_vector(7 downto 0);   -- horizontal back porch
+            mode_vs_pol : in    std_logic;                      -- vertical sync polarity (1 = high)
+            mode_hs_pol : in    std_logic;                      -- horizontal sync polarity (1 = high)
+
+            raw_f       : out   std_logic;
+            raw_vs      : out   std_logic;
+            raw_hs      : out   std_logic;
+            raw_vblank  : out   std_logic;
+            raw_hblank  : out   std_logic;
+            raw_ax      : out   std_logic_vector(11 downto 0);
+            raw_ay      : out   std_logic_vector(11 downto 0);
+            raw_align   : in    std_logic_vector(21 downto 0);
+
+            vga_vs      : in    std_logic;
+            vga_hs      : in    std_logic;
+            vga_vblank  : in    std_logic;
+            vga_hblank  : in    std_logic;
+            vga_r       : in    std_logic_vector(7 downto 0);
+            vga_g       : in    std_logic_vector(7 downto 0);
+            vga_b       : in    std_logic_vector(7 downto 0);
+            vga_ax      : in    std_logic_vector(11 downto 0);
+            vga_ay      : in    std_logic_vector(11 downto 0);
+
+            dvi_clk_p   : out   std_logic;
+            dvi_clk_n   : out   std_logic;
+            dvi_ch_p    : out   std_logic_vector(0 to 2);
+            dvi_ch_n    : out   std_logic_vector(0 to 2)
+
+        );
+    end component dvi_out;
+
+end package dvi_out_pkg;
+
+----------------------------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+
 library xil_defaultlib;
 use xil_defaultlib.types_pkg.all;
 
