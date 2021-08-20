@@ -17,6 +17,44 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+
+package video_out_timing_pkg is
+
+    component video_out_timing is
+        port (
+
+            rst         : in    std_logic;                      -- reset
+            clk         : in    std_logic;                      -- pixel clock
+
+            pix_rep     : in    std_logic;                      -- pixel repetition; 0 = none/x1, 1 = x2
+            interlace   : in    std_logic;
+            v_tot       : in    std_logic_vector(10 downto 0);  -- 1..2048 (must be odd if interlaced)
+            v_act       : in    std_logic_vector(10 downto 0);  -- 1..2048 (should be even)
+            v_sync      : in    std_logic_vector(2 downto 0);   -- 1..7
+            v_bp        : in    std_logic_vector(5 downto 0);   -- 1`..31
+            h_tot       : in    std_logic_vector(11 downto 0);  -- 1..4096
+            h_act       : in    std_logic_vector(10 downto 0);  -- 1..2048 (must be even)
+            h_sync      : in    std_logic_vector(6 downto 0);   -- 1..127
+            h_bp        : in    std_logic_vector(7 downto 0);   -- 0..255
+
+            align       : in    std_logic_vector(21 downto 0);  -- alignment delay
+            f           : out   std_logic;                      -- field ID
+            vs          : out   std_logic;                      -- vertical sync
+            hs          : out   std_logic;                      -- horizontal sync
+            vblank      : out   std_logic;                      -- vertical blank
+            hblank      : out   std_logic;                      -- horizontal blank
+            ax          : out   std_logic_vector(11 downto 0);  -- visible area X (signed)
+            ay          : out   std_logic_vector(11 downto 0)   -- visible area Y (signed)
+
+        );
+    end component video_out_timing;
+
+end package video_out_timing_pkg;
+
+----------------------------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library xpm;

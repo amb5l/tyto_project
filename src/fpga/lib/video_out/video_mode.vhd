@@ -15,6 +15,9 @@
 -- https://www.gnu.org/licenses/.                                             --
 --------------------------------------------------------------------------------
 
+library ieee;
+use ieee.std_logic_1164.all;
+
 package video_mode_pkg is
 
     type video_clk_sel_t is (
@@ -30,7 +33,50 @@ package video_mode_pkg is
             ASPECT_16_9
         );
 
+    constant MODE_640x480p60    : std_logic_vector(3 downto 0) := "0000";
+    constant MODE_720x480p60    : std_logic_vector(3 downto 0) := "0001";
+    constant MODE_720x480p60w   : std_logic_vector(3 downto 0) := "0010";
+    constant MODE_1280x720p60   : std_logic_vector(3 downto 0) := "0011";
+    constant MODE_1920x1080i60  : std_logic_vector(3 downto 0) := "0100";
+    constant MODE_720x480i60    : std_logic_vector(3 downto 0) := "0101";
+    constant MODE_720x480i60w   : std_logic_vector(3 downto 0) := "0110";
+    constant MODE_1920x1080p60  : std_logic_vector(3 downto 0) := "0111";
+    constant MODE_720x576p50    : std_logic_vector(3 downto 0) := "1000";
+    constant MODE_720x576p50w   : std_logic_vector(3 downto 0) := "1001";
+    constant MODE_1280x720p50   : std_logic_vector(3 downto 0) := "1010";
+    constant MODE_1920x1080i50  : std_logic_vector(3 downto 0) := "1011";
+    constant MODE_720x576i50    : std_logic_vector(3 downto 0) := "1100";
+    constant MODE_720x576i50w   : std_logic_vector(3 downto 0) := "1101";
+    constant MODE_1920x1080p50  : std_logic_vector(3 downto 0) := "1110";
+
+    component video_mode is
+        port (
+
+            mode        : in    std_logic_vector(3 downto 0);
+
+            clk_sel     : out   std_logic_vector(1 downto 0);   -- pixel frequency select
+            dmt         : out   std_logic;                      -- 1 = DMT, 0 = CEA
+            id          : out   std_logic_vector(7 downto 0);   -- DMT ID or CEA/CTA VIC
+            pix_rep     : out   std_logic;                      -- 1 = pixel doubling/repetition
+            aspect      : out   std_logic_vector(1 downto 0);   -- 0x = normal, 10 = force 16:9, 11 = force 4:3
+            interlace   : out   std_logic;                      -- interlaced/progressive scan
+            v_tot       : out   std_logic_vector(10 downto 0);  -- vertical total lines (must be odd if interlaced)
+            v_act       : out   std_logic_vector(10 downto 0);  -- vertical active lines
+            v_sync      : out   std_logic_vector(2 downto 0);   -- vertical sync width
+            v_bp        : out   std_logic_vector(5 downto 0);   -- vertical back porch
+            h_tot       : out   std_logic_vector(11 downto 0);  -- horizontal total
+            h_act       : out   std_logic_vector(10 downto 0);  -- horizontal active
+            h_sync      : out   std_logic_vector(6 downto 0);   -- horizontal sync width
+            h_bp        : out   std_logic_vector(7 downto 0);   -- horizontal back porch
+            vs_pol      : out   std_logic;                      -- vertical sync polarity (1 = high)
+            hs_pol      : out   std_logic                       -- horizontal sync polarity (1 = high)
+
+        );
+    end component video_mode;
+
 end package video_mode_pkg;
+
+----------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;

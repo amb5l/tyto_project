@@ -17,6 +17,31 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+
+package video_out_clock_pkg is
+
+    component video_out_clock is
+        port (
+
+            rsti        : in    std_logic;                      -- reset
+            clki        : in    std_logic;                      -- reference clock
+            sys_rst     : in    std_logic;                      -- system clock synchronous reset
+            sys_clk     : in    std_logic;                      -- system clock e.g. 100MHz
+
+            sel         : in    std_logic_vector(1 downto 0);   -- output clock select: 00 = 25.2, 01 = 27.0, 10 = 74.25, 11 = 148.5
+            rsto        : out   std_logic;                      -- output clock synchronous reset
+            clko        : out   std_logic;                      -- pixel clock
+            clko_x5     : out   std_logic                       -- serialiser clock (5x pixel clock)
+
+        );
+    end component video_out_clock;
+
+end package video_out_clock_pkg;
+
+----------------------------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library xpm;
@@ -82,7 +107,7 @@ architecture structural of video_out_clock is
 
 begin
 
-    process(sys_rst,sys_clk)
+    process(sys_clk)
 
         -- contents of synchronous ROM table
         function cfg_tbl (addr : std_logic_vector) return std_logic_vector is
@@ -191,19 +216,7 @@ begin
         end function cfg_tbl;
 
     begin
-        if sys_rst = '1' then -- full reset
-
-            sel_prev    <= (others => '0');
-            cfg_rst     <= '1';
-            cfg_daddr   <= (others => '0');
-            cfg_den     <= '0';
-            cfg_dwe     <= '0';
-            cfg_di      <= (others => '0');
-            cfg_state   <= RESET;
-
-            rsto_req   <= '1';
-
-        elsif rising_edge(sys_clk) then
+        if rising_edge(sys_clk) then
 
             cfg_tbl_data <= cfg_tbl(cfg_tbl_addr); -- synchronous ROM
 
@@ -258,6 +271,20 @@ begin
                         rsto_req <= '0';
                     end if;
             end case;
+
+            if sys_rst = '1' then -- full reset
+
+                sel_prev    <= (others => '0');
+                cfg_rst     <= '1';
+                cfg_daddr   <= (others => '0');
+                cfg_den     <= '0';
+                cfg_dwe     <= '0';
+                cfg_di      <= (others => '0');
+                cfg_state   <= RESET;
+
+                rsto_req   <= '1';
+
+            end if;
 
         end if;
     end process;
