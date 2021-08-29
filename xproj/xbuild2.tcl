@@ -6,7 +6,7 @@ set xbuild_design [lindex $argv 0]
 set xbuild_board [lindex $argv 1]
 
 # design specific settings
-source "xproj/$xbuild_design.tcl"
+source "xproj/${xbuild_design}.tcl"
 
 # create project
 cd xproj/vitis
@@ -19,6 +19,8 @@ app create -name ${vitis_proj_name} -hw ${xsa_file} -os standalone -proc cpu -te
 # into .project as follows:
 set sources_uri_prefix "PARENT-4-PROJECT_LOC/"
 set mb_files [lmap f $mb_files {join [list ${src_path_mb} $f] ""}]
+set mb_submodule_files [lmap f $mb_submodule_files {join [list ${submodule_path} $f] ""}]
+set mb_files [list {*}$mb_files {*}$mb_submodule_files]
 set x [list "	<linkedResources>"]
 foreach f $mb_files {
     set n [file tail $f]
@@ -44,10 +46,40 @@ close $f
 
 #build release and debug ELF files
 app config -name $vitis_proj_name build-config release
+if {[info exists mb_symbols]} {
+    foreach mb_symbol $mb_symbols {
+        app config -name $vitis_proj_name define-compiler-symbols $mb_symbol
+    }
+}
 app config -name $vitis_proj_name include-path "../../../../../${src_path_mb}/lib"
+if {[info exists mb_include_paths]} {
+    foreach mb_include_path $mb_include_paths {
+        app config -name $vitis_proj_name include-path "../../../../../${src_path_mb}/${mb_include_path}"
+    }
+}
+if {[info exists mb_submodule_include_paths]} {
+    foreach mb_submodule_include_path $mb_submodule_include_paths {
+        app config -name $vitis_proj_name include-path "../../../../../${submodule_path}/${mb_submodule_include_paths}"
+    }
+}
 app build -name $vitis_proj_name
 app config -name $vitis_proj_name build-config debug
+if {[info exists mb_symbols]} {
+    foreach mb_symbol $mb_symbols {
+        app config -name $vitis_proj_name define-compiler-symbols $mb_symbol
+    }
+}
 app config -name $vitis_proj_name include-path "../../../../../${src_path_mb}/lib"
+if {[info exists mb_include_paths]} {
+    foreach mb_include_path $mb_include_paths {
+        app config -name $vitis_proj_name include-path "../../../../../${src_path_mb}/${mb_include_path}"
+    }
+}
+if {[info exists mb_submodule_include_paths]} {
+    foreach mb_submodule_include_path $mb_submodule_include_paths {
+        app config -name $vitis_proj_name include-path "../../../../../${submodule_path}/${mb_submodule_include_paths}"
+    }
+}
 app config -name $vitis_proj_name define-compiler-symbols BUILD_CONFIG_DEBUG
 app build -name $vitis_proj_name
 

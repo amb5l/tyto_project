@@ -21,7 +21,9 @@
 #include "stdint.h"
 
 void axi_gpio_init();
+uint32_t axi_gpio_get_gpt(uint8_t channel);
 void axi_gpio_set_gpt(uint8_t channel, uint32_t data);
+uint32_t axi_gpio_get_gpo(uint8_t channel);
 void axi_gpio_set_gpo(uint8_t channel, uint32_t data);
 uint32_t axi_gpio_get_gpi(uint8_t channel);
 

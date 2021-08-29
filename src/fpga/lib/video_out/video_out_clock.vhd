@@ -66,11 +66,11 @@ entity video_out_clock is
     );
 end entity video_out_clock;
 
-architecture structural of video_out_clock is
+architecture synth of video_out_clock is
 
     signal sel_s        : std_logic_vector(1 downto 0);     -- sel, synchronised to sys_clk
 
-    signal rsto_req     : std_logic;                        -- rsto request, synchronous e to sys_clk
+    signal rsto_req     : std_logic;                        -- rsto request, synchronous to sys_clk
 
     signal mmcm_rst      : std_logic;                       -- MMCM reset
     signal locked       : std_logic;                        -- MMCM locked output
@@ -320,7 +320,7 @@ begin
         )
         port map (
             src_clk     => '0',
-            src_in(0)   => rsto_req or not locked,
+            src_in(0)   => rsto_req or not locked or cfg_rst or rsti,
             dest_clk    => clko,
             dest_out(0) => rsto
         );
@@ -433,4 +433,4 @@ begin
             O   => clk_fb
         );
 
-end architecture structural;
+end architecture synth;

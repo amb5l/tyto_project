@@ -1,8 +1,8 @@
 /*******************************************************************************
-** axi_gpio.c                                                                 **
-** Simple driver AXI GPIO IP core.                                            **
+** fb.c                                                                       **
+** Simple frame buffer driver.                                                **
 ********************************************************************************
-** (C) Copyright 2020 Adam Barnes <ambarnes@gmail.com>                        **
+** (C) Copyright 2021 Adam Barnes <ambarnes@gmail.com>                        **
 ** This file is part of The Tyto Project. The Tyto Project is free software:  **
 ** you can redistribute it and/or modify it under the terms of the GNU Lesser **
 ** General Public License as published by the Free Software Foundation,       **
@@ -16,35 +16,46 @@
 *******************************************************************************/
 
 #include <stdint.h>
+
 #include "peekpoke.h"
-#include "axi_gpio_p.h"
+#include "axi_gpio.h"
+#include "fb.h"
 
-void axi_gpio_init()
-{
-    // empty for now
-}
+typedef struct {
+	uint16_t width;
+	uint16_t height;
+} fb_dim_t;
 
-uint32_t axi_gpio_get_gpt(uint8_t channel)
-{
-    return peek32(BASE+(channel?REG_GPIO2_TRI:REG_GPIO_TRI));
-}
+const fb_dim_t fb_dims[] = {
+		{640, 480},
+		{720, 480},
+		{720, 480},
+		{1280, 720},
+		{1920, 1080},
+		{720, 480},
+		{720, 480},
+		{1920, 1080},
+		{720, 576},
+		{720, 576},
+		{1280, 720},
+		{1920, 1080},
+		{720, 576},
+		{720, 576},
+		{1920, 1080}
+};
 
-void axi_gpio_set_gpt(uint8_t channel, uint32_t data)
+void fb_init(uint8_t mode)
 {
-    poke32(BASE+(channel?REG_GPIO2_TRI:REG_GPIO_TRI),data);
-}
+	uint32_t a, r;
+	uint32_t fb_size;
 
-uint32_t axi_gpio_get_gpo(uint8_t channel)
-{
-    return peek32(BASE+(channel?REG_GPIO2_DATA:REG_GPIO_DATA));
-}
-
-void axi_gpio_set_gpo(uint8_t channel, uint32_t data)
-{
-    poke32(BASE+(channel?REG_GPIO2_DATA:REG_GPIO_DATA),data);
-}
-
-uint32_t axi_gpio_get_gpi(uint8_t channel)
-{
-    return peek32(BASE+(channel?REG_GPIO2_DATA:REG_GPIO_DATA));
+	fb_mode = mode;
+	fb_width = fb_dims[mode].width;
+	fb_height = fb_dims[mode].width;
+	fb_size = (fb_width * fb_height) << 2;
+	r = axi_gpio_get_gpo(0);
+	r = (r & ~0x0F) | (mode & 0x0F);
+	axi_gpio_set_gpo(0, r);
+	for (a = FB_BASE; a < FB_BASE+fb_size; a+=4)
+		poke32(a, rand());
 }

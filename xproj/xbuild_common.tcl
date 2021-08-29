@@ -7,6 +7,7 @@ set src_path_fpga "src/fpga/"
 set src_path_sim "src/sim/"
 set src_path_mb "src/mb/"
 set src_path_65xx "src/65xx/"
+set submodule_path "submodules/"
 
 proc lmap {_var list body} {
     upvar 1 $_var var

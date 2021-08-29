@@ -1,8 +1,8 @@
 /*******************************************************************************
-** axi_gpio.c                                                                 **
-** Simple driver AXI GPIO IP core.                                            **
+** main.c                                                                     **
+** MicroBlaze demo application for mb_fb design.                              **
 ********************************************************************************
-** (C) Copyright 2020 Adam Barnes <ambarnes@gmail.com>                        **
+** (C) Copyright 2021 Adam Barnes <ambarnes@gmail.com>                        **
 ** This file is part of The Tyto Project. The Tyto Project is free software:  **
 ** you can redistribute it and/or modify it under the terms of the GNU Lesser **
 ** General Public License as published by the Free Software Foundation,       **
@@ -16,35 +16,32 @@
 *******************************************************************************/
 
 #include <stdint.h>
-#include "peekpoke.h"
-#include "axi_gpio_p.h"
+#include <stdlib.h>
 
-void axi_gpio_init()
-{
-    // empty for now
-}
+#include "fb.h"
+#include "hagl.h"
+#include "font5x7.h"
 
-uint32_t axi_gpio_get_gpt(uint8_t channel)
+int main()
 {
-    return peek32(BASE+(channel?REG_GPIO2_TRI:REG_GPIO_TRI));
-}
+	int i;
 
-void axi_gpio_set_gpt(uint8_t channel, uint32_t data)
-{
-    poke32(BASE+(channel?REG_GPIO2_TRI:REG_GPIO_TRI),data);
-}
+	fb_init(FB_MODE_640x480p60);
+	hagl_init();
 
-uint32_t axi_gpio_get_gpo(uint8_t channel)
-{
-    return peek32(BASE+(channel?REG_GPIO2_DATA:REG_GPIO_DATA));
-}
+	//for (uint16_t i = 1; i < 1000; i++) {
+	for (i = 0; i < 1000; i++) {
+	    int16_t x0 = rand() % DISPLAY_WIDTH;
+	    int16_t y0 = rand() % DISPLAY_HEIGHT;
+	    int16_t x1 = rand() % DISPLAY_WIDTH;
+	    int16_t y1 = rand() % DISPLAY_HEIGHT;
+	    color_t color = rand() % 0xffffff;
 
-void axi_gpio_set_gpo(uint8_t channel, uint32_t data)
-{
-    poke32(BASE+(channel?REG_GPIO2_DATA:REG_GPIO_DATA),data);
-}
+	    hagl_draw_line(x0, y0, x1, y1, color);
+	}
 
-uint32_t axi_gpio_get_gpi(uint8_t channel)
-{
-    return peek32(BASE+(channel?REG_GPIO2_DATA:REG_GPIO_DATA));
+	hagl_put_text(L"hello world!", 0, 0, 0xFFFFFF, font5x7);
+
+	while(1)
+		;
 }

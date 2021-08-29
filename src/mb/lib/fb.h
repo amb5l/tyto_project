@@ -1,8 +1,8 @@
 /*******************************************************************************
-** axi_gpio.c                                                                 **
-** Simple driver AXI GPIO IP core.                                            **
+** fb.c                                                                       **
+** Simple frame buffer driver.                                                **
 ********************************************************************************
-** (C) Copyright 2020 Adam Barnes <ambarnes@gmail.com>                        **
+** (C) Copyright 2021 Adam Barnes <ambarnes@gmail.com>                        **
 ** This file is part of The Tyto Project. The Tyto Project is free software:  **
 ** you can redistribute it and/or modify it under the terms of the GNU Lesser **
 ** General Public License as published by the Free Software Foundation,       **
@@ -15,36 +15,33 @@
 ** https://www.gnu.org/licenses/.                                             **
 *******************************************************************************/
 
-#include <stdint.h>
-#include "peekpoke.h"
-#include "axi_gpio_p.h"
+#ifndef _FB_H_
+#define _FB_H_
 
-void axi_gpio_init()
-{
-    // empty for now
-}
+#include "xparameters.h"
 
-uint32_t axi_gpio_get_gpt(uint8_t channel)
-{
-    return peek32(BASE+(channel?REG_GPIO2_TRI:REG_GPIO_TRI));
-}
+#define FB_BASE XPAR_AXI_BASEADDR
 
-void axi_gpio_set_gpt(uint8_t channel, uint32_t data)
-{
-    poke32(BASE+(channel?REG_GPIO2_TRI:REG_GPIO_TRI),data);
-}
+#define FB_MODE_640x480p60		0
+#define FB_MODE_720x480p60  	1
+#define FB_MODE_720x480p60w 	2
+#define FB_MODE_1280x720p60 	3
+#define FB_MODE_1920x1080i60	4
+#define FB_MODE_720x480i60  	5
+#define FB_MODE_720x480i60w 	6
+#define FB_MODE_1920x1080p60	7
+#define FB_MODE_720x576p50  	8
+#define FB_MODE_720x576p50w 	9
+#define FB_MODE_1280x720p50 	10
+#define FB_MODE_1920x1080i50	11
+#define FB_MODE_720x576i50  	12
+#define FB_MODE_720x576i50w 	13
+#define FB_MODE_1920x1080p50	14
 
-uint32_t axi_gpio_get_gpo(uint8_t channel)
-{
-    return peek32(BASE+(channel?REG_GPIO2_DATA:REG_GPIO_DATA));
-}
+uint8_t fb_mode;
+int16_t fb_width;
+int16_t fb_height;
 
-void axi_gpio_set_gpo(uint8_t channel, uint32_t data)
-{
-    poke32(BASE+(channel?REG_GPIO2_DATA:REG_GPIO_DATA),data);
-}
+void fb_init(uint8_t mode);
 
-uint32_t axi_gpio_get_gpi(uint8_t channel)
-{
-    return peek32(BASE+(channel?REG_GPIO2_DATA:REG_GPIO_DATA));
-}
+#endif
