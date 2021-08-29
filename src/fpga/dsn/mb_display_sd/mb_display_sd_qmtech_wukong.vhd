@@ -126,8 +126,8 @@ begin
             uart_rx     => ser_rx,
             dvi_clk_p   => hdmi_clk_p,
             dvi_clk_n   => hdmi_clk_n,
-            dvi_ch_p    => hdmi_d_p,
-            dvi_ch_n    => hdmi_d_n
+            dvi_d_p     => hdmi_d_p,
+            dvi_d_n     => hdmi_d_n
         );
 
     -- unused I/Os

@@ -37,8 +37,8 @@ entity mb_display_sd is
 
         dvi_clk_p   : out   std_logic;                      -- DVI TMDS clock (differential, P)
         dvi_clk_n   : out   std_logic;                      -- DVI TMDS clock (differential, N)
-        dvi_ch_p    : out   std_logic_vector(0 to 2);       -- DVI TMDS channels 0..2 (differential, P)
-        dvi_ch_n    : out   std_logic_vector(0 to 2)        -- DVI TMDS channels 0..2 (differential, N)
+        dvi_d_p     : out   std_logic_vector(0 to 2);       -- DVI TMDS data channels 0..2 (differential, P)
+        dvi_d_n     : out   std_logic_vector(0 to 2)        -- DVI TMDS data channels 0..2 (differential, N)
 
     );
 end entity mb_display_sd;
@@ -138,8 +138,8 @@ begin
             border      => gpo(7 downto 4),
             dvi_clk_p   => dvi_clk_p,
             dvi_clk_n   => dvi_clk_n,
-            dvi_ch_p    => dvi_ch_p,
-            dvi_ch_n    => dvi_ch_n
+            dvi_d_p     => dvi_d_p,
+            dvi_d_n     => dvi_d_n
         );
 
 end architecture synth;

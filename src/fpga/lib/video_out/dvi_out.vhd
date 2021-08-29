@@ -61,8 +61,8 @@ package dvi_out_pkg is
 
             dvi_clk_p   : out   std_logic;
             dvi_clk_n   : out   std_logic;
-            dvi_ch_p    : out   std_logic_vector(0 to 2);
-            dvi_ch_n    : out   std_logic_vector(0 to 2)
+            dvi_d_p     : out   std_logic_vector(0 to 2);
+            dvi_d_n     : out   std_logic_vector(0 to 2)
 
         );
     end component dvi_out;
@@ -118,8 +118,8 @@ entity dvi_out is
 
         dvi_clk_p   : out   std_logic;
         dvi_clk_n   : out   std_logic;
-        dvi_ch_p    : out   std_logic_vector(0 to 2);
-        dvi_ch_n    : out   std_logic_vector(0 to 2)
+        dvi_d_p     : out   std_logic_vector(0 to 2);
+        dvi_d_n     : out   std_logic_vector(0 to 2)
 
     );
 end entity dvi_out;
@@ -180,8 +180,8 @@ begin
                 clk     => clk,
                 clk_x5  => clk_x5,
                 d       => tmds_q(i),
-                out_p   => dvi_ch_p(i),
-                out_n   => dvi_ch_n(i)
+                out_p   => dvi_d_p(i),
+                out_n   => dvi_d_n(i)
             );
     end generate GEN_DVI;
 

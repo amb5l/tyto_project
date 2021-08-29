@@ -76,8 +76,8 @@ entity hdmi_out is
 
         hdmi_clk_p  : out   std_logic;
         hdmi_clk_n  : out   std_logic;
-        hdmi_ch_p   : out   std_logic_vector(0 to 2);
-        hdmi_ch_n   : out   std_logic_vector(0 to 2)
+        hdmi_d_p    : out   std_logic_vector(0 to 2);
+        hdmi_d_n    : out   std_logic_vector(0 to 2)
 
     );
 end entity hdmi_out;
@@ -241,8 +241,8 @@ begin
                 clk     => clk,
                 clk_x5  => clk_x5,
                 d       => hdmi_q(i),
-                out_p   => hdmi_ch_p(i),
-                out_n   => hdmi_ch_n(i)
+                out_p   => hdmi_d_p(i),
+                out_n   => hdmi_d_n(i)
             );
     end generate GEN_HDMI;
 

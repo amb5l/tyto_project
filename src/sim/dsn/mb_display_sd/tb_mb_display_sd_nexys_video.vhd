@@ -39,8 +39,8 @@ architecture sim of tb_mb_display_sd_nexys_video is
 
     signal hdmi_tx_clk_p    : std_logic;
     signal hdmi_tx_clk_n    : std_logic;
-    signal hdmi_tx_ch_p     : std_logic_vector(0 to 2);
-    signal hdmi_tx_ch_n     : std_logic_vector(0 to 2);
+    signal hdmi_tx_d_p      : std_logic_vector(0 to 2);
+    signal hdmi_tx_d_n      : std_logic_vector(0 to 2);
 
     signal vga_clk          : std_logic;
     signal vga_vs           : std_logic;
@@ -80,8 +80,8 @@ begin
             oled_sdin       => open,
             hdmi_tx_clk_p   => hdmi_tx_clk_p,
             hdmi_tx_clk_n   => hdmi_tx_clk_n,
-            hdmi_tx_ch_p    => hdmi_tx_ch_p,
-            hdmi_tx_ch_n    => hdmi_tx_ch_n,
+            hdmi_tx_d_p     => hdmi_tx_d_p,
+            hdmi_tx_d_n     => hdmi_tx_d_n,
             ac_mclk         => open,
             ac_dac_sdata    => open,
             uart_rx_out     => open,
@@ -98,14 +98,15 @@ begin
 
     DECODE: entity xil_defaultlib.model_dvi_decoder
         port map (
-            ch      => hdmi_tx_ch_p,
-            clk     => vga_clk,
-            vs      => vga_vs,
-            hs      => vga_hs,
-            de      => vga_de,
-            p(2)    => vga_r,
-            p(1)    => vga_g,
-            p(0)    => vga_b
+            dvi_clk     => hdmi_tx_clk_p,
+            dvi_d       => hdmi_tx_d_p,
+            vga_clk     => vga_clk,
+            vga_vs      => vga_vs,
+            vga_hs      => vga_hs,
+            vga_de      => vga_de,
+            vga_p(2)    => vga_r,
+            vga_p(1)    => vga_g,
+            vga_p(0)    => vga_b
         );
 
     CAPTURE: entity xil_defaultlib.model_vga_sink

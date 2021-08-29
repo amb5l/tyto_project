@@ -83,18 +83,15 @@ begin
 
     DECODE: entity xil_defaultlib.model_dvi_decoder
         port map (
-
-            ch      => hdmi_d_p,
-
-            clk     => vga_clk,
-
-            vs      => vga_vs,
-            hs      => vga_hs,
-            de      => vga_de,
-            p(2)    => vga_r,
-            p(1)    => vga_g,
-            p(0)    => vga_b
-
+            dvi_clk     => hdmi_clk_p,
+            dvi_d       => hdmi_d_p,
+            vga_clk     => vga_clk,
+            vga_vs      => vga_vs,
+            vga_hs      => vga_hs,
+            vga_de      => vga_de,
+            vga_p(2)    => vga_r,
+            vga_p(1)    => vga_g,
+            vga_p(0)    => vga_b
         );
 
     CAPTURE: entity xil_defaultlib.model_vga_sink

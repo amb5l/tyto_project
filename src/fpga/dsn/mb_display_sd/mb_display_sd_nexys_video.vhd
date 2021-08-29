@@ -51,8 +51,8 @@ entity top is
         -- HDMI RX
 --      hdmi_rx_clk_p   : in    std_logic;
 --      hdmi_rx_clk_n   : in    std_logic;
---      hdmi_rx_ch_p    : in    std_logic_vector(0 to 2);
---      hdmi_rx_ch_n    : in    std_logic_vector(0 to 2);
+--      hdmi_rx_d_p     : in    std_logic_vector(0 to 2);
+--      hdmi_rx_d_n     : in    std_logic_vector(0 to 2);
 --      hdmi_rx_sda     : inout std_logic;
 --      hdmi_rx_cec     : in    std_logic;
 --      hdmi_rx_hpd     : out   std_logic;
@@ -62,8 +62,8 @@ entity top is
         -- HDMI TX
         hdmi_tx_clk_p   : out   std_logic;
         hdmi_tx_clk_n   : out   std_logic;
-        hdmi_tx_ch_p    : out   std_logic_vector(0 to 2);
-        hdmi_tx_ch_n    : out   std_logic_vector(0 to 2);
+        hdmi_tx_d_p     : out   std_logic_vector(0 to 2);
+        hdmi_tx_d_n     : out   std_logic_vector(0 to 2);
 --      hdmi_tx_scl     : out   std_logic;
 --      hdmi_tx_sda     : inout std_logic;
 --      hdmi_tx_cec     : out   std_logic;
@@ -210,8 +210,8 @@ begin
             uart_rx     => uart_tx_in,
             dvi_clk_p   => hdmi_tx_clk_p,
             dvi_clk_n   => hdmi_tx_clk_n,
-            dvi_ch_p    => hdmi_tx_ch_p,
-            dvi_ch_n    => hdmi_tx_ch_n
+            dvi_d_p     => hdmi_tx_d_p,
+            dvi_d_n     => hdmi_tx_d_n
         );
 
 

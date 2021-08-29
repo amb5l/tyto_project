@@ -25,15 +25,14 @@ use xil_defaultlib.types_pkg.all;
 entity model_dvi_decoder is
     port
     (
-        ch      : in    std_logic_vector(0 to 2);   -- 3x TMDS channels
+        dvi_clk : in    std_logic;
+        dvi_d   : in    std_logic_vector(0 to 2);   -- 3x TMDS channels
 
-        clk     : out   std_logic;
-
-        vs      : out   std_logic;                  -- vertical sync
-        hs      : out   std_logic;                  -- horizontal sync
-        de      : out   std_logic;                  -- pixel data enable
-        p       : out   slv_7_0_t(0 to 2)           -- pixel data components
-
+        vga_clk : out   std_logic;
+        vga_vs  : out   std_logic;                  -- vertical sync
+        vga_hs  : out   std_logic;                  -- horizontal sync
+        vga_de  : out   std_logic;                  -- pixel data enable
+        vga_p   : out   slv_7_0_t(0 to 2)           -- pixel data components
     );
 end entity model_dvi_decoder;
 
@@ -51,7 +50,8 @@ begin
     GEN_TMDS_CDR_DES: for i in 0 to 2 generate
         TMDS_CDR_DES: entity xil_defaultlib.model_tmds_cdr_des
             port map (
-                serial      => ch(i),
+                refclk      => dvi_clk,
+                serial      => dvi_d(i),
                 parallel    => tmds_data(i),
                 clk         => tmds_clk(i),
                 locked      => tmds_locked(i)
@@ -59,7 +59,7 @@ begin
     end generate GEN_TMDS_CDR_DES;
 
     -- assumption: channel to channel skew is small (less than half a pixel clock)
-    clk <= tmds_clk(0);
+    vga_clk <= tmds_clk(0);
 
     -- decode
     process(tmds_data)
@@ -68,9 +68,9 @@ begin
         for i in 0 to 2 loop
             s := tmds_data(i);
             tmds_de(i) <= tmds_locked(i);
-            p(i)(0) <= s(0) xor s(9);
+            vga_p(i)(0) <= s(0) xor s(9);
             for j in 1 to 7 loop
-                p(i)(j) <= (s(j) xor s(9)) xor ((s(j-1) xor s(9)) xnor s(8));
+                vga_p(i)(j) <= (s(j) xor s(9)) xor ((s(j-1) xor s(9)) xnor s(8));
             end loop;
             case s is
                 when "1101010100" => tmds_c(i) <= "00"; tmds_de(i) <= '0';
@@ -81,8 +81,8 @@ begin
             end case;
         end loop;
     end process;
-    de <= tmds_de(0) and tmds_de(1) and tmds_de(2);
-    vs <= tmds_c(0)(1);
-    hs <= tmds_c(0)(0);
+    vga_de <= tmds_de(0) and tmds_de(1) and tmds_de(2);
+    vga_vs <= tmds_c(0)(1);
+    vga_hs <= tmds_c(0)(0);
 
 end architecture model;
