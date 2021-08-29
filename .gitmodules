@@ -1,0 +1,4 @@
+[submodule "submodules/hagl"]
+	path = submodules/hagl
+	url = https://github.com/amb5l/hagl.git
+	branch = variable-display-size
