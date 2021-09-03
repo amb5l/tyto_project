@@ -4,6 +4,8 @@ This design combines a MicroBlaze CPU with a graphics frame buffer, and supports
 
 Supported boards: *Digilent Nexys Video* and *QMTECH Wukong*.
 
+image::./mb_fb_640x480.png[title="Example display.",align="center"]
+
 The frame buffer is held in DDR3 SDRAM and the design uses a simple arbiter to share access to the DDR3 IP core's user interface between the CPU and the display controller, with priority going to the display.
 
 A simple MicroBlaze demo application is included, based on link:https://github.com/tuupola/hagl[Mike Tuupola's *hagl* graphics library].
@@ -98,17 +100,9 @@ To update the documentation, export an SVG image by entering the following comma
 
 == MicroBlaze Software
 
-The application initialises the display, prints a banner, and then fills the rest of the screen with coloured messages.
+The application initialises the frame buffer and hagl library, draws 100 random graphical objects (lines, triangles, rectangles or ellipses), overlays this with a simple grid, and prints a message.
 
-=== Source Files
-
-`main.c`:: The top level of the application.
-
-`printf.c`, `printf.h`:: Small memory footprint `printf()` implementation.
-
-`vdu.c`, `vdu.h`:: Text display (Video Display Unit) driver.
-
-`peekpoke.h`:: Macros to access memory and registers.
+Note that this project depends on the variable-display-size branch of a fork of the hagl library which can be found https://github.com/amb5l/hagl[here].
 
 === Build
 
@@ -118,7 +112,7 @@ In this design, the `Debug` and `Release` configurations are identical.
 
 == Simulation
 
-A simulation testbench is provided as part of the Vivado project. This captures the video output to a BMP file. Note that simulation run times are substantial.
+A simulation testbench is provided as part of the Vivado project. This captures the video output to a BMP file. Note that simulation run times are substantial. Alternative testbenches are provided to simulate simplified versions of the design that exclude the MIG; these run much faster.
 
 ++++
 <style>

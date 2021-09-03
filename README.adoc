@@ -34,6 +34,10 @@ Supports: Digilent Nexys Video, QMTECH Wukong
 
 A simple DDR3 SDRAM tester based on https://github.com/jorisvr/vhdl_prng[Joris van Rantwijk's Pseudo Random Number Generator]. Also demonstrates the addition of user defined clocks, including the 200MHz IODELAYCTRL reference clock, to the DDR3 IP core MMCM. <<./doc/ddr3_test/ddr3_test.adoc#,More...>> 
 
+=== mb_fb
+
+A MicroBlaze CPU with a 24 bit high resolution graphics frame buffer held in DDR3 SDRAM, with simple demo application based on link:https://github.com/tuupola/hagl[Mike Tuupola's *hagl* graphics library]. <<./doc/mb_fb/mb_fb.adoc#,More...>>
+
 Supports: Digilent Nexys Video
 
 == Credits

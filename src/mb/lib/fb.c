@@ -51,7 +51,7 @@ void fb_init(uint8_t mode)
 
 	fb_mode = mode;
 	fb_width = fb_dims[mode].width;
-	fb_height = fb_dims[mode].width;
+	fb_height = fb_dims[mode].height;
 	fb_size = (fb_width * fb_height) << 2;
 	r = axi_gpio_get_gpo(0);
 	r = (r & ~0x0F) | (mode & 0x0F);
