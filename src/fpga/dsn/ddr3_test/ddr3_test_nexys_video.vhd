@@ -259,7 +259,7 @@ begin
     ja(7 downto 1) <= (others => '0');
     led(7) <= stat_run;
     led(6) <= '1' when stat_errors /= x"00000000" else '0';
-    led(5 downto 0) <= stat_passes(5 downto 0) when sw(7) = '0' else stat_errors(5 downto 0) when sw(7) = '1';
+    led(5 downto 0) <= stat_passes(5 downto 0) when sw(7) = '0' else stat_errors(5 downto 0);
 
     -- unused I/O
 
