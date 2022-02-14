@@ -2,6 +2,8 @@
 
 The Tyto Project is a collection of open source FPGA designs and IP for retro computing and embedded systems.
 
+NOTE: Work on a new version of this repository is underway - see https://github.com/amb5l/tyto2[The Tyto Project (Version 2)]. This version is now frozen.
+
 At present, the designs target *Xilinx 7-Series* FPGAs, and the *Digilent Nexys Video* board, with some support for the *QMTECH Wukong* board. Development is done with the free editions of Xilinx Vitis and Vivado (version *2020.x*) on Windows 10. Note that Vitis is only required for designs that include a MicroBlaze CPU.
 
 == Designs
