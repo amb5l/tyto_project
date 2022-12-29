@@ -17,7 +17,7 @@
 
 # clock renaming
 create_generated_clock -name sys_clk [get_pins MAIN/SYSTEM_CLOCK/MMCM/CLKOUT0]
-create_generated_clock -name pix_clk_x5 [get_pins MAIN/HDMI_CLOCK/MMCM/CLKOUT0]
-create_generated_clock -name pix_clk [get_pins MAIN/HDMI_CLOCK/MMCM/CLKOUT1]
-create_generated_clock -name pcm_clk [get_pins MAIN/TONE/CLOCK/MMCM/CLKOUT0]
+create_generated_clock -name pix_clk_x5 [get_pins MAIN/VIDEO_CLOCK/MMCM/CLKOUT0]
+create_generated_clock -name pix_clk [get_pins MAIN/VIDEO_CLOCK/MMCM/CLKOUT1]
+create_generated_clock -name pcm_clk [get_pins MAIN/AUDIO_TONE/CLOCK/MMCM/CLKOUT0]
 
